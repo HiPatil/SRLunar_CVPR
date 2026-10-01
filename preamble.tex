@@ -1,0 +1,34 @@
+%% Packages and macros for the LeLunar draft. Loaded before hyperref.
+
+%% Local XeTeX/tectonic builds cannot load the Times (ptm) fonts that cvpr.sty requests;
+%% use a Times clone there so page breaks match a pdfLaTeX build. pdfLaTeX is unaffected.
+\usepackage{iftex}
+\ifXeTeX
+  \usepackage{fontspec}
+  \setmainfont{texgyretermes}[Extension=.otf, UprightFont=*-regular, BoldFont=*-bold,
+    ItalicFont=*-italic, BoldItalicFont=*-bolditalic]
+  \setsansfont{texgyreheros}[Extension=.otf, UprightFont=*-regular, BoldFont=*-bold,
+    ItalicFont=*-italic, BoldItalicFont=*-bolditalic]
+\fi
+
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,calc,backgrounds,shapes.geometric}
+\usepackage{pifont}
+
+%% Inline annotations; switch off for submission by uncommenting the two lines below.
+\newcommand{\red}[1]{{\color{red}#1}}
+\newcommand{\todo}[1]{{\color{red}#1}}
+\newcommand{\TODO}[1]{\textbf{\color{red}[TODO: #1]}}
+% \renewcommand{\TODO}[1]{}
+% \renewcommand{\todo}[1]{#1}
+
+\newcommand{\method}{LeLunar\xspace}
+\newcommand{\gap}{\ensuremath{\Delta}\xspace}
+\newcommand{\share}{\ensuremath{S}\xspace}
+\newcommand{\cmark}{\ding{51}}
+\newcommand{\xmark}{\ding{55}}
+\newcommand{\LN}{\operatorname{LN}}
+\newcommand{\sg}{\operatorname{sg}}
+\DeclareMathOperator*{\E}{\mathbb{E}}
