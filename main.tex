@@ -4,8 +4,8 @@
 
 %%%%%%%%% PAPER TYPE  - PLEASE UPDATE FOR FINAL VERSION
 % \usepackage{cvpr}              % To produce the CAMERA-READY version
-\usepackage[review]{cvpr}      % To produce the REVIEW version
-% \usepackage[pagenumbers]{cvpr} % To force page numbers, e.g. for an arXiv version
+% \usepackage[review]{cvpr}      % To produce the REVIEW version
+\usepackage[pagenumbers]{cvpr} % To force page numbers, e.g. for an arXiv version
 
 % Import additional packages in the preamble file, before hyperref
 \input{preamble}
@@ -20,10 +20,20 @@
 
 \title{\method: From Raw Orbital Products to a Latent World Model of the Lunar Surface}
 
-\author{Anonymous CVPR submission}
+\author{Sujit Roy\thanks{Equal contribution.}\\
+The University of Alabama in Huntsville\\
+NASA Marshall Space Flight Center\\
+Huntsville, AL, USA\\
+{\tt\small sujit.roy@nasa.gov}
+\and
+Himanshu Patil\footnotemark[1]\\
+The University of Alabama in Huntsville\\
+Huntsville, AL, USA\\
+{\tt\small hap0020@uah.edu}
+}
 
 \begin{document}
-\maketitle
+{\renewcommand*{\thefootnote}{\fnsymbol{footnote}}\maketitle}
 \input{sec/0_abstract}
 \input{sec/1_intro}
 \input{sec/2_related_works}
