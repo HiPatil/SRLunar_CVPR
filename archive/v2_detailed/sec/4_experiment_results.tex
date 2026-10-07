@@ -1,0 +1,165 @@
+\section{Experiments and results}
+\label{sec:experiments}
+
+\newcommand{\pend}{--}
+
+\Cref{tab:hypotheses} maps each hypothesis of \cref{sec:method} to the experiment that decides it. The runs are in progress. For each experiment we give the design, the outcome that would support or refute its hypothesis, and the table we will report.
+
+\begin{table*}[t]
+  \centering
+  \footnotesize
+  \setlength{\tabcolsep}{4pt}
+  \caption{Hypotheses, the outcome that would support each, and the experiment that decides it.}
+  \label{tab:hypotheses}
+  \begin{tabular}{@{}lp{6.2cm}p{8.4cm}l@{}}
+    \toprule
+    & Claim & Supported if & Test \\
+    \midrule
+    H1 & Cross-modal prediction under a given sun encodes the terrain behind appearance & frozen features beat a same-product JEPA on terrain tasks; shadow AUC drops when the sun is swapped or removed & E1 \\
+    H2 & A position-code attractor exists; absolute-position channels speed it up & some arms reach low loss with a failing content probe; removing the channels delays or prevents it & E2 \\
+    H3 & VICReg covariance and a hinge on predictions push toward it; pooled SIGReg cannot stop it & $\Delta$ falls with $w_c$ and with the hinge; SIGReg plateaus & E3 \\
+    H4 & Tile-centered $\Delta$ and $S$ detect both collapse modes early & $S$ separates probe-labeled runs and fires before within-sample signals & E4 \\
+    H5 & Ground-aligned stems, floor, centering and the dense loss improve dense alignment & per-pair $\Delta$ and dense tasks improve, most for coarse products & E5 \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+\subsection{Setup}
+\label{sec:setup}
+
+\paragraph{Pretraining.} The encoder has 217M parameters (104M active per token), the predictor 116M, and the stems 1.7M (linear) to 62M (convolutional) over all 38 product slots. We use AdamW~\cite{loshchilov2019decoupled} (weight decay 0.05, clipping at 1), bf16, warmup over 10\% of the steps with cosine decay, and flash attention~\cite{dao2022flashattention} at $G{\geq}64$. Ablations run at $G{=}32$ on the seven products of \cref{tab:modalities} for 50k steps, at an effective batch of 768 footprint rows, with three seeds per arm. The main model runs at $G{=}64$ with fixed-GSD, centered convolutional stems. \TODO{final main-model recipe: steps, batch, learning rate, floor}
+
+\paragraph{Monitoring.} Every 2.5k steps we evaluate a fixed, seeded validation subset with fixed block masks and log the loss, the within-tile rank and token cosine gap, the VICReg terms, $\Delta$ and $S$ (\cref{eq:gap,eq:share}), and a variant of the latter two without tile centering or same-product partners.
+
+\paragraph{Collapse labels.}
+\label{sec:ground_truth}
+Testing H2--H4 needs labels that do not come from the monitors. We use two linear probes on frozen EMA target tokens, fitted on training footprints and scored on held-out ones. The \emph{content probe} regresses, at every cell, physical values from co-registered maps of other products, such as elevation and slope for a WAC token or 643\,nm albedo for a DTM token. The \emph{position probe} regresses the cell coordinates. Position is decodable in healthy JEPAs too~\cite{yamada2026siamjepa}, so it is informative only next to the content probe. A checkpoint is labeled a position code when its content $R^2$ falls below 10\% of the run's maximum while its position $R^2$ stays above 0.9. It is labeled dimensionally collapsed when the effective rank of tile-mean embeddings over 1024 validation tiles falls below 10\% of the run's maximum. \TODO{confirm thresholds on a pilot}
+
+\subsection{Downstream tasks and baselines}
+\label{sec:downstream_protocol}
+
+\paragraph{Crater detection.} We detect Robbins craters~\cite{robbins2019new} on WAC tiles at 100\,m (1k and 10k training tiles) and hand-labeled craters on NAC images at about 1\,m, with an FCOS head~\cite{tian2019fcos} on a feature pyramid from four encoder depths. We report COCO mAP and mAP$_{50}$ with a fully frozen backbone and with fine-tuned stems, and also train with the DTM as a second input or with a DTM that the model predicts from the WAC image.
+
+\paragraph{Irregular mare patches.} We segment IMPs~\cite{braden2014evidence} on NAC images from SomBench~\cite{patil2026sombench} and report IoU.
+
+\paragraph{Shape and albedo from shading.} On held-out footprints observed under at least six suns, probes read relief and albedo from the predictor features computed from a single WAC image. We report correlation with the plane-detrended DTM and the 643\,nm mosaic, invariance across observations of a footprint, and top-1 retrieval of the footprint from its predicted relief.
+
+\paragraph{Baselines.} We compare with the NASA-IBM lunar foundation model~\cite{fraccaro2026multimodal} under its published protocol, a generic self-supervised ViT-B (DINOv3~\cite{simeoni2026dinov3}) and the controls of E1. We will add LunarFM~\cite{gironamata2026lunarfm} and Moonstone~\cite{prasad2026moonstone} where weights are available. \TODO{confirm availability}
+
+\subsection{E1: What the objective learns}
+\label{sec:e1}
+
+We compare \method with two controls of identical architecture and budget: a same-product JEPA, whose targets are masked cells of the source product itself as in I-JEPA, and \method without illumination conditioning. A randomly initialized encoder gives the floor. All are evaluated on the tasks of \cref{sec:downstream_protocol}. For the sun-swap test we take held-out footprints with at least six WAC observations. We decode WAC shadows from the predictor under the observation's true sun, the sun of another observation of the same footprint, and no sun, and score shadow localization by AUC on high-incidence observations.
+
+H1 is supported if \method beats the same-product JEPA on terrain-dependent tasks at matched compute (\cref{tab:res_downstream}), and if removing the sun from the predictor costs most on the shadow test. If the same-product control matches \method, the cross-modal target adds nothing that same-image prediction does not already give. \TODO{fill after E1}
+
+\begin{table*}[t]
+  \centering
+  \footnotesize
+  \setlength{\tabcolsep}{4.5pt}
+  \caption{Downstream results with frozen encoders (E1). Crater columns: mAP$_{50}$ on Robbins 1k and 10k (WAC, 100\,m) and on NAC (${\approx}1$\,m). IMP: IoU. Relief and albedo: correlation of linear probes on held-out footprints. Shadow AUC under the true sun, another observation's sun and no sun. Entries will be filled when the runs finish.}
+  \label{tab:res_downstream}
+  \begin{tabular}{@{}lccccccccc@{}}
+    \toprule
+    & \multicolumn{3}{c}{Craters (mAP$_{50}$)} & IMP & \multicolumn{2}{c}{Shape from shading} & \multicolumn{3}{c}{Shadow AUC} \\
+    \cmidrule(lr){2-4} \cmidrule(lr){5-5} \cmidrule(lr){6-7} \cmidrule(l){8-10}
+    Encoder & 1k & 10k & NAC & IoU & relief & albedo & true & other & none \\
+    \midrule
+    Random initialization            & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend \\
+    DINOv3 ViT-B~\cite{simeoni2026dinov3} & \pend & \pend & \pend & \pend & \pend & \pend & -- & -- & -- \\
+    NASA-IBM LFM~\cite{fraccaro2026multimodal} & \pend & \pend & \pend & \pend & \pend & \pend & -- & -- & -- \\
+    Same-product JEPA                & \pend & \pend & \pend & \pend & \pend & \pend & -- & -- & -- \\
+    \method without sun              & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend \\
+    \method                          & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+\subsection{E2, E3: Position code and regularizers}
+\label{sec:e2}
+
+\paragraph{E2 (H2).} Starting from the baseline recipe, each arm adds or removes one absolute-position channel: (a) windowed long-short attention~\cite{zhu2021long} in the encoder; (b) illumination through AdaLN only, without the sentinel token; (c) target cells hidden from the context, so that the loss is computed only where the source is masked, as in I-JEPA; (d) no location embedding on the target tokens.
+
+\paragraph{E3 (H3).} We sweep the covariance weight over $\{0, 0.005, 0.05\}$ and set the variance hinge on the predictions to $\gamma \in \{1, 0.3\}$ or off, keeping the hinge on the context. We compare pooled SIGReg (weight 0.003) with SIGReg on a small projector of the pooled context embedding, the setting LeJEPA was designed for~\cite{balestriero2025lejepa}.
+
+H2 is supported if at least one arm of \cref{tab:res_collapse} reaches a low loss with a failing content probe, and if arms without absolute-position channels collapse later or not at all. H3 is supported if $\Delta$ falls as the covariance weight grows and rises when the hinge on the predictions is removed. \TODO{fill after E2, E3; add curves of a healthy and a collapsed arm}
+
+\begin{table}[t]
+  \centering
+  \footnotesize
+  \setlength{\tabcolsep}{2.8pt}
+  \caption{Pretraining signals at the end of each arm of E2 and E3 (mean over three seeds). $\mathcal{L}_{\text{cm}}$: validation loss. Rank: effective rank within a tile. $\mathcal{C}$: VICReg covariance. $R^2_c$: content probe.}
+  \label{tab:res_collapse}
+  \begin{tabular}{@{}lcccccc@{}}
+    \toprule
+    Arm & $\mathcal{L}_{\text{cm}}$ & Rank & $\mathcal{C}$ & $R^2_c$ & $\Delta$ & $S$ \\
+    \midrule
+    Baseline                              & \pend & \pend & \pend & \pend & \pend & \pend \\
+    + long-short attention                & \pend & \pend & \pend & \pend & \pend & \pend \\
+    Sun via AdaLN only                    & \pend & \pend & \pend & \pend & \pend & \pend \\
+    Target cells hidden from context      & \pend & \pend & \pend & \pend & \pend & \pend \\
+    No location on targets                & \pend & \pend & \pend & \pend & \pend & \pend \\
+    \midrule
+    $w_c{=}0$ / $0.05$                    & \pend & \pend & \pend & \pend & \pend & \pend \\
+    Hinge on $\hat z$: $\gamma{=}0.3$ / off & \pend & \pend & \pend & \pend & \pend & \pend \\
+    Pooled SIGReg / projector SIGReg      & \pend & \pend & \pend & \pend & \pend & \pend \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{E4: Do the monitors work?}
+\label{sec:e4}
+
+On all checkpoints of E2, E3 and E5 we treat each monitor as a detector of the probe labels. We report the area under the ROC curve and the lead time, the number of steps between the monitor's first alarm and the onset of the label.
+
+H4 is supported if the tile-centered $S$ has the highest AUROC and a positive lead time for both collapse modes (\cref{tab:res_monitors}). If the uncentered variant does as well, centering is unnecessary; if within-sample signals do, the cross-sample comparison is. \TODO{fill after E4}
+
+\begin{table}[t]
+  \centering
+  \footnotesize
+  \setlength{\tabcolsep}{3.5pt}
+  \caption{Monitors as collapse detectors over all checkpoints of E2, E3 and E5: AUROC against the probe labels and lead time (k steps before label onset) for position-code (P) and dimensional (D) collapse.}
+  \label{tab:res_monitors}
+  \begin{tabular}{@{}lcccc@{}}
+    \toprule
+    & \multicolumn{2}{c}{AUROC} & \multicolumn{2}{c}{Lead time} \\
+    \cmidrule(lr){2-3} \cmidrule(l){4-5}
+    Monitor & P & D & P & D \\
+    \midrule
+    Validation loss                        & \pend & \pend & \pend & \pend \\
+    Within-tile rank                       & \pend & \pend & \pend & \pend \\
+    Within-tile token cosine gap           & \pend & \pend & \pend & \pend \\
+    VICReg covariance                      & \pend & \pend & \pend & \pend \\
+    $S$, uncentered                        & \pend & \pend & \pend & \pend \\
+    $S$, tile-centered (ours)              & \pend & \pend & \pend & \pend \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{E5: Tokens and dense losses}
+\label{sec:e5}
+
+Stems form a $2{\times}2$ design (shared canvas or fixed-GSD, linear or convolutional). On top of fixed-GSD convolutional stems we vary centering ($k{=}3$ or $k{=}s{+}2$), the kernel floor ($k_{\min} \in \{1, 4\}$, with the 12 products of \cref{tab:modalities} at $G{=}64$), the dense context loss ($\lambda_{\text{ctx}} \in \{0, 0.5\}$, $\tau \in \{1, 2, 4\}$) and the grid ($G \in \{32, 64, 128\}$, one seed at 128).
+
+H5 is supported if the kernel floor helps most on pairs with coarse products, and if centering and the dense loss help on dense tasks (\cref{tab:res_tokens}). If the shared canvas matches the fixed-GSD stems, their added complexity is not worth it. \TODO{fill after E5}
+
+\begin{table}[t]
+  \centering
+  \footnotesize
+  \setlength{\tabcolsep}{3pt}
+  \caption{Stem and dense-loss variants (E5). $\Delta$ over all product pairs and over pairs with a coarse product (roughness, TiO$_2$, WAC UV), content probe $R^2_c$, crater mAP$_{50}$ (Robbins 1k) and relief correlation.}
+  \label{tab:res_tokens}
+  \begin{tabular}{@{}lccccc@{}}
+    \toprule
+    Variant & $\Delta_{\text{all}}$ & $\Delta_{\text{coarse}}$ & $R^2_c$ & Craters & Relief \\
+    \midrule
+    Shared canvas, linear            & \pend & \pend & \pend & \pend & \pend \\
+    Shared canvas, conv              & \pend & \pend & \pend & \pend & \pend \\
+    Fixed-GSD, linear                & \pend & \pend & \pend & \pend & \pend \\
+    Fixed-GSD, conv ($k{=}3$)        & \pend & \pend & \pend & \pend & \pend \\
+    Fixed-GSD, conv, centered        & \pend & \pend & \pend & \pend & \pend \\
+    \quad + $k_{\min}{=}4$           & \pend & \pend & \pend & \pend & \pend \\
+    \quad + dense loss ($\tau{=}2$)  & \pend & \pend & \pend & \pend & \pend \\
+    \bottomrule
+  \end{tabular}
+\end{table}

@@ -1,0 +1,826 @@
+% EO / remote-sensing foundation models, JEPA-for-EO, planetary FMs, and geographic location encoders.
+% Verified 2026-09-30 against arXiv API (export.arxiv.org), CVF open access BibTeX, NeurIPS proceedings BibTeX,
+% PMLR volume pages, ECVA listing, and Crossref DOIs. See eo_fm.md for per-entry verification URLs.
+% Macros expected from the CVPR template: CVPR, ICCV, ECCV, NIPS, ICLR, PAMI, IJCV.
+
+% ---------------------------------------------------------------------------
+% Core EO foundation models
+% ---------------------------------------------------------------------------
+
+@inproceedings{cong2022satmae,
+  title     = {{SatMAE}: Pre-training Transformers for Temporal and Multi-Spectral Satellite Imagery},
+  author    = {Yezhen Cong and Samar Khanna and Chenlin Meng and Patrick Liu and Erik Rozi and Yutong He and Marshall Burke and David B. Lobell and Stefano Ermon},
+  booktitle = NIPS,
+  volume    = {35},
+  pages     = {197--211},
+  year      = {2022},
+  note      = {arXiv:2207.08051}
+}
+
+@inproceedings{reed2023scale,
+  title     = {{Scale-MAE}: A Scale-Aware Masked Autoencoder for Multiscale Geospatial Representation Learning},
+  author    = {Colorado J. Reed and Ritwik Gupta and Shufan Li and Sarah Brockman and Christopher Funk and Brian Clipp and Kurt Keutzer and Salvatore Candido and Matt Uyttendaele and Trevor Darrell},
+  booktitle = ICCV,
+  pages     = {4088--4099},
+  year      = {2023},
+  note      = {arXiv:2212.14532}
+}
+
+@inproceedings{tang2023cross,
+  title     = {{Cross-Scale MAE}: A Tale of Multiscale Exploitation in Remote Sensing},
+  author    = {Maofeng Tang and Andrei Cozma and Konstantinos Georgiou and Hairong Qi},
+  booktitle = NIPS,
+  volume    = {36},
+  pages     = {20054--20066},
+  year      = {2023},
+  note      = {arXiv:2401.15855}
+}
+
+@inproceedings{noman2024rethinking,
+  title     = {Rethinking Transformers Pre-training for Multi-Spectral Satellite Imagery},
+  author    = {Mubashir Noman and Muzammal Naseer and Hisham Cholakkal and Rao Muhammad Anwer and Salman Khan and Fahad Shahbaz Khan},
+  booktitle = CVPR,
+  pages     = {27811--27819},
+  year      = {2024},
+  note      = {SatMAE++. arXiv:2403.05419}
+}
+
+@inproceedings{mendieta2023towards,
+  title     = {Towards Geospatial Foundation Models via Continual Pretraining},
+  author    = {Mat{\'\i}as Mendieta and Boran Han and Xingjian Shi and Yi Zhu and Chen Chen},
+  booktitle = ICCV,
+  pages     = {16806--16816},
+  year      = {2023},
+  note      = {GFM. arXiv:2302.04476}
+}
+
+@inproceedings{fuller2023croma,
+  title     = {{CROMA}: Remote Sensing Representations with Contrastive Radar-Optical Masked Autoencoders},
+  author    = {Anthony Fuller and Koreen Millard and James R. Green},
+  booktitle = NIPS,
+  volume    = {36},
+  pages     = {5506--5538},
+  year      = {2023},
+  note      = {arXiv:2311.00566}
+}
+
+@inproceedings{wang2024decoupling,
+  title     = {Decoupling Common and Unique Representations for Multimodal Self-supervised Learning},
+  author    = {Yi Wang and Conrad M. Albrecht and Nassim {Ait Ali Braham} and Chenying Liu and Zhitong Xiong and Xiao Xiang Zhu},
+  booktitle = ECCV,
+  pages     = {286--303},
+  year      = {2024},
+  doi       = {10.1007/978-3-031-73397-0_17},
+  note      = {DeCUR. arXiv:2309.05300}
+}
+
+@article{wang2023ssl4eo,
+  title     = {{SSL4EO-S12}: A Large-Scale Multimodal, Multitemporal Dataset for Self-Supervised Learning in {Earth} Observation},
+  author    = {Yi Wang and Nassim {Ait Ali Braham} and Zhitong Xiong and Chenying Liu and Conrad M. Albrecht and Xiao Xiang Zhu},
+  journal   = {IEEE Geoscience and Remote Sensing Magazine},
+  volume    = {11},
+  number    = {3},
+  pages     = {98--106},
+  year      = {2023},
+  doi       = {10.1109/MGRS.2023.3281651},
+  note      = {arXiv:2211.07044}
+}
+
+@inproceedings{bastani2023satlaspretrain,
+  title     = {{SatlasPretrain}: A Large-Scale Dataset for Remote Sensing Image Understanding},
+  author    = {Favyen Bastani and Piper Wolters and Ritwik Gupta and Joe Ferdinando and Aniruddha Kembhavi},
+  booktitle = ICCV,
+  pages     = {16772--16782},
+  year      = {2023},
+  note      = {arXiv:2211.15660}
+}
+
+@article{jakubik2023foundation,
+  title     = {Foundation Models for Generalist Geospatial Artificial Intelligence},
+  author    = {Johannes Jakubik and Sujit Roy and C. E. Phillips and Paolo Fraccaro and Denys Godwin and Bianca Zadrozny and Daniela Szwarcman and Carlos Gomes and Gabby Nyirjesy and Blair Edwards and Daiki Kimura and Naomi Simumba and others},
+  journal   = {arXiv preprint arXiv:2310.18660},
+  year      = {2023},
+  note      = {Prithvi}
+}
+
+@article{szwarcman2026prithvi,
+  title     = {{Prithvi-EO-2.0}: A Versatile Multitemporal Foundation Model for {Earth} Observation Applications},
+  author    = {Daniela Szwarcman and Sujit Roy and Paolo Fraccaro and Thorsteinn Eli Gislason and Benedikt Blumenstiel and Rinki Ghosal and Pedro Henrique de Oliveira and Joao Lucas de Sousa Almeida and Rocco Sedona and Yanghui Kang and Srija Chakraborty and Sizhe Wang and others},
+  journal   = {IEEE Transactions on Geoscience and Remote Sensing},
+  volume    = {64},
+  pages     = {1--20},
+  year      = {2026},
+  doi       = {10.1109/TGRS.2025.3642610},
+  note      = {arXiv:2412.02732 (2024)}
+}
+
+@article{hong2024spectralgpt,
+  title     = {{SpectralGPT}: Spectral Remote Sensing Foundation Model},
+  author    = {Danfeng Hong and Bing Zhang and Xuyang Li and Yuxuan Li and Chenyu Li and Jing Yao and Naoto Yokoya and Hao Li and Pedram Ghamisi and Xiuping Jia and Antonio Plaza and Paolo Gamba and Jon Atli Benediktsson and Jocelyn Chanussot},
+  journal   = PAMI,
+  volume    = {46},
+  number    = {8},
+  pages     = {5227--5244},
+  year      = {2024},
+  doi       = {10.1109/TPAMI.2024.3362475},
+  note      = {arXiv:2311.07113}
+}
+
+@inproceedings{guo2024skysense,
+  title     = {{SkySense}: A Multi-Modal Remote Sensing Foundation Model Towards Universal Interpretation for {Earth} Observation Imagery},
+  author    = {Xin Guo and Jiangwei Lao and Bo Dang and Yingying Zhang and Lei Yu and Lixiang Ru and Liheng Zhong and Ziyuan Huang and Kang Wu and Dingxiang Hu and Huimei He and Jian Wang and Jingdong Chen and Ming Yang and Yongjun Zhang and Yansheng Li},
+  booktitle = CVPR,
+  pages     = {27672--27683},
+  year      = {2024},
+  note      = {arXiv:2312.10115}
+}
+
+@inproceedings{zhang2025skysense,
+  title     = {{SkySense V2}: A Unified Foundation Model for Multi-modal Remote Sensing},
+  author    = {Yingying Zhang and Lixiang Ru and Kang Wu and Lei Yu and Lei Liang and Yansheng Li and Jingdong Chen},
+  booktitle = ICCV,
+  pages     = {9136--9146},
+  year      = {2025},
+  note      = {arXiv:2507.13812}
+}
+
+@article{irvin2023usat,
+  title     = {{USat}: A Unified Self-Supervised Encoder for Multi-Sensor Satellite Imagery},
+  author    = {Jeremy Irvin and Lucas Tao and Joanne Zhou and Yuntao Ma and Langston Nashold and Benjamin Liu and Andrew Y. Ng},
+  journal   = {arXiv preprint arXiv:2312.02199},
+  year      = {2023}
+}
+
+@inproceedings{han2024bridging,
+  title     = {Bridging Remote Sensors with Multisensor Geospatial Foundation Models},
+  author    = {Boran Han and Shuai Zhang and Xingjian Shi and Markus Reichstein},
+  booktitle = CVPR,
+  pages     = {27852--27862},
+  year      = {2024},
+  note      = {msGFM. arXiv:2404.01260}
+}
+
+@article{xiong2024neural,
+  title     = {Neural Plasticity-Inspired Multimodal Foundation Model for {Earth} Observation},
+  author    = {Zhitong Xiong and Yi Wang and Fahong Zhang and Adam J. Stewart and Jo{\"e}lle Hanna and Damian Borth and Ioannis Papoutsis and Bertrand {Le Saux} and Gustau Camps-Valls and Xiao Xiang Zhu},
+  journal   = {arXiv preprint arXiv:2403.15356},
+  year      = {2024},
+  note      = {DOFA}
+}
+
+@inproceedings{astruc2024omnisat,
+  title     = {{OmniSat}: Self-Supervised Modality Fusion for {Earth} Observation},
+  author    = {Guillaume Astruc and Nicolas Gonthier and Clement Mallet and Loic Landrieu},
+  booktitle = ECCV,
+  pages     = {409--427},
+  year      = {2024},
+  doi       = {10.1007/978-3-031-73390-1_24},
+  note      = {arXiv:2404.08351}
+}
+
+@inproceedings{astruc2025anysat,
+  title     = {{AnySat}: One {Earth} Observation Model for Many Resolutions, Scales, and Modalities},
+  author    = {Guillaume Astruc and Nicolas Gonthier and Cl{\'e}ment Mallet and Loic Landrieu},
+  booktitle = CVPR,
+  pages     = {19530--19540},
+  year      = {2025},
+  note      = {arXiv:2412.14123}
+}
+
+@inproceedings{tseng2025galileo,
+  title     = {Galileo: Learning Global \& Local Features of Many Remote Sensing Modalities},
+  author    = {Gabriel Tseng and Anthony Fuller and Marlena Reil and Henry Herzog and Patrick Beukema and Favyen Bastani and James R. Green and Evan Shelhamer and Hannah Kerner and David Rolnick},
+  booktitle = {ICML},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {267},
+  pages     = {60280--60300},
+  year      = {2025},
+  note      = {arXiv:2502.09356}
+}
+
+@article{tseng2023lightweight,
+  title     = {Lightweight, Pre-trained Transformers for Remote Sensing Timeseries},
+  author    = {Gabriel Tseng and Ruben Cartuyvels and Ivan Zvonkov and Mirali Purohit and David Rolnick and Hannah Kerner},
+  journal   = {arXiv preprint arXiv:2304.14065},
+  year      = {2023},
+  note      = {Presto}
+}
+
+@inproceedings{nedungadi2024mmearth,
+  title     = {{MMEarth}: Exploring Multi-Modal Pretext Tasks for Geospatial Representation Learning},
+  author    = {Vishal Nedungadi and Ankit Kariryaa and Stefan Oehmcke and Serge Belongie and Christian Igel and Nico Lang},
+  booktitle = ECCV,
+  pages     = {164--182},
+  year      = {2024},
+  doi       = {10.1007/978-3-031-73039-9_10},
+  note      = {arXiv:2405.02771}
+}
+
+@inproceedings{wang2025towards,
+  title     = {Towards a Unified {Copernicus} Foundation Model for {Earth} Vision},
+  author    = {Yi Wang and Zhitong Xiong and Chenying Liu and Adam J. Stewart and Thomas Dujardin and Nikolaos Ioannis Bountos and Angelos Zavras and Franziska Gerken and Ioannis Papoutsis and Laura Leal-Taix{\'e} and Xiao Xiang Zhu},
+  booktitle = ICCV,
+  pages     = {9888--9899},
+  year      = {2025},
+  note      = {Copernicus-FM. arXiv:2503.11849}
+}
+
+@inproceedings{jakubik2025terramind,
+  title     = {{TerraMind}: Large-Scale Generative Multimodality for {Earth} Observation},
+  author    = {Johannes Jakubik and Felix Yang and Benedikt Blumenstiel and Erik Scheurer and Rocco Sedona and Stefano Maurogiovanni and Jente Bosmans and Nikolaos Dionelis and Valerio Marsocci and Niklas Kopp and Rahul Ramachandran and Paolo Fraccaro and Thomas Brunschwiler and Gabriele Cavallaro and Juan Bernab{\'e}-Moreno and Nicolas Long{\'e}p{\'e}},
+  booktitle = ICCV,
+  pages     = {7383--7394},
+  year      = {2025},
+  note      = {arXiv:2504.11171}
+}
+
+@inproceedings{waldmann2025panopticon,
+  title     = {Panopticon: Advancing Any-Sensor Foundation Models for {Earth} Observation},
+  author    = {Leonard Waldmann and Ando Shah and Yi Wang and Nils Lehmann and Adam J. Stewart and Zhitong Xiong and Xiao Xiang Zhu and Stefan Bauer and John Chuang},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) Workshops},
+  pages     = {2229--2239},
+  year      = {2025},
+  note      = {EarthVision workshop. arXiv:2503.10845}
+}
+
+@inproceedings{sumbul2025smarties,
+  title     = {{SMARTIES}: Spectrum-Aware Multi-Sensor Auto-Encoder for Remote Sensing Images},
+  author    = {Gencer Sumbul and Chang Xu and Emanuele Dalsasso and Devis Tuia},
+  booktitle = ICCV,
+  pages     = {5569--5578},
+  year      = {2025},
+  note      = {arXiv:2506.19585}
+}
+
+@article{brown2025alphaearth,
+  title     = {{AlphaEarth} Foundations: An Embedding Field Model for Accurate and Efficient Global Mapping from Sparse Label Data},
+  author    = {Christopher F. Brown and Michal R. Kazmierski and Valerie J. Pasquarella and William J. Rucklidge and Masha Samsikova and Chenhui Zhang and Evan Shelhamer and Estefania Lahera and Olivia Wiles and Simon Ilyushchenko and Noel Gorelick and Lihui Lydia Zhang and Sophia Alj and Emily Schechter and Sean Askay and Oliver Guinan and Rebecca Moore and Alexis Boukouvalas and Pushmeet Kohli},
+  journal   = {arXiv preprint arXiv:2507.22291},
+  year      = {2025}
+}
+
+@inproceedings{herzog2026olmoearth,
+  title     = {{OlmoEarth}: Stable Latent Image Modeling for Multimodal {Earth} Observation},
+  author    = {Henry Herzog and Favyen Bastani and Yawen Zhang and Gabriel Tseng and Joseph Redmon and Hadrien Sablon and Ryan Park and Jacob Morrison and Alexandra Buraczynski and Karen Farley and Joshua Hansen and Andrew Howe and others},
+  booktitle = CVPR,
+  pages     = {34806--34817},
+  year      = {2026},
+  note      = {arXiv:2511.13655}
+}
+
+@article{forgaard2026thor,
+  title     = {{THOR}: A Versatile Foundation Model for {Earth} Observation Climate and Society Applications},
+  author    = {Theodor Forgaard and Jarle H. Reksten and Anders U. Waldeland and Valerio Marsocci and Nicolas Long{\'e}p{\'e} and Michael Kampffmeyer and Arnt-B{\o}rre Salberg},
+  journal   = {arXiv preprint arXiv:2601.16011},
+  year      = {2026}
+}
+
+@inproceedings{houdre2026ramen,
+  title     = {{RAMEN}: Resolution-Adjustable Multimodal Encoder for {Earth} Observation},
+  author    = {Nicolas Houdr{\'e} and Diego Marcos and Hugo {Riffaud de Turckheim} and Dino Ienco and Laurent Wendling and Camille Kurtz and Sylvain Lobry},
+  booktitle = CVPR,
+  pages     = {27838--27848},
+  year      = {2026},
+  note      = {arXiv:2512.05025}
+}
+
+@inproceedings{labatie2026maestro,
+  title     = {{MAESTRO}: Masked AutoEncoders for Multimodal, Multitemporal, and Multispectral {Earth} Observation Data},
+  author    = {Antoine Labatie and Michael Vaccaro and Nina Lardiere and Anatol Garioud and Nicolas Gonthier},
+  booktitle = {Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)},
+  pages     = {212--224},
+  year      = {2026},
+  note      = {arXiv:2508.10894}
+}
+
+@inproceedings{bountos2025fomo,
+  title     = {{FoMo}: Multi-Modal, Multi-Scale and Multi-Task Remote Sensing Foundation Models for Forest Monitoring},
+  author    = {Nikolaos Ioannis Bountos and Arthur Ouaknine and Ioannis Papoutsis and David Rolnick},
+  booktitle = {Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume    = {39},
+  number    = {27},
+  pages     = {27858--27868},
+  year      = {2025},
+  doi       = {10.1609/aaai.v39i27.35002},
+  note      = {arXiv:2312.10114}
+}
+
+@inproceedings{prexl2024senpa,
+  title     = {{SenPa-MAE}: Sensor Parameter Aware Masked Autoencoder for Multi-Satellite Self-Supervised Pretraining},
+  author    = {Jonathan Prexl and Michael Schmitt},
+  booktitle = {German Conference on Pattern Recognition (GCPR), Lecture Notes in Computer Science},
+  pages     = {317--331},
+  year      = {2024},
+  doi       = {10.1007/978-3-031-85187-2_20},
+  note      = {LNCS volume issued 2025. arXiv:2408.11000}
+}
+
+@inproceedings{prexl2025sarformer,
+  title     = {{SARFormer} -- An Acquisition Parameter Aware Vision Transformer for Synthetic Aperture Radar Data},
+  author    = {Jonathan Prexl and Michael Recla and Michael Schmitt},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) Workshops},
+  pages     = {2250--2259},
+  year      = {2025},
+  note      = {EarthVision workshop. arXiv:2504.08441}
+}
+
+% ---------------------------------------------------------------------------
+% Resolution / GSD / patch-size handling
+% ---------------------------------------------------------------------------
+
+@inproceedings{beyer2023flexivit,
+  title     = {{FlexiViT}: One Model for All Patch Sizes},
+  author    = {Lucas Beyer and Pavel Izmailov and Alexander Kolesnikov and Mathilde Caron and Simon Kornblith and Xiaohua Zhai and Matthias Minderer and Michael Tschannen and Ibrahim Alabdulmohsin and Filip Pavetic},
+  booktitle = CVPR,
+  pages     = {14496--14506},
+  year      = {2023},
+  note      = {arXiv:2212.08013}
+}
+
+@inproceedings{dehghani2023patch,
+  title     = {Patch n' Pack: {NaViT}, a Vision Transformer for any Aspect Ratio and Resolution},
+  author    = {Mostafa Dehghani and Basil Mustafa and Josip Djolonga and Jonathan Heek and Matthias Minderer and Mathilde Caron and Andreas Steiner and Joan Puigcerver and Robert Geirhos and Ibrahim Alabdulmohsin and Avital Oliver and Piotr Padlewski and Alexey Gritsenko and Mario Lu{\v{c}}i{\'c} and Neil Houlsby},
+  booktitle = NIPS,
+  volume    = {36},
+  pages     = {2252--2274},
+  year      = {2023},
+  note      = {arXiv:2307.06304}
+}
+
+@article{li2026fleximo,
+  title     = {{FlexiMo}: A Flexible Remote Sensing Foundation Model},
+  author    = {Xuyang Li and Chenyu Li and Pedram Ghamisi and Danfeng Hong and Jon Atli Benediktsson and Jocelyn Chanussot},
+  journal   = {IEEE Transactions on Geoscience and Remote Sensing},
+  volume    = {64},
+  pages     = {1--16},
+  year      = {2026},
+  doi       = {10.1109/TGRS.2026.3656362},
+  note      = {arXiv:2503.23844 (2025, four authors)}
+}
+
+@inproceedings{li2026any,
+  title     = {{Any-Optical-Model}: A Universal Foundation Model for Optical Remote Sensing},
+  author    = {Xuyang Li and Chenyu Li and Danfeng Hong},
+  booktitle = {Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume    = {40},
+  number    = {8},
+  pages     = {6539--6547},
+  year      = {2026},
+  doi       = {10.1609/aaai.v40i8.37583},
+  note      = {arXiv:2512.17224}
+}
+
+@article{luo2026georope,
+  title     = {{GeoRoPE}: Ground-Aware Rotary Adaptation for Remote Sensing Foundation Models},
+  author    = {Yu Luo and Kun Hu and Mengwei He and Xiaogang Zhu and Shan Zeng and Allen Benter and Wei Xiang and Patrick Filippi and Thomas Francis Bishop and Zhiyong Wang},
+  journal   = {arXiv preprint arXiv:2606.14760},
+  year      = {2026}
+}
+
+@article{kage2026multi,
+  title     = {Multi-modal, Multi-scale Representation Learning for Satellite Imagery Analysis Just Needs a Good {ALiBi}},
+  author    = {Patrick Kage and Pavlos Andreadis},
+  journal   = {arXiv preprint arXiv:2604.10347},
+  year      = {2026},
+  note      = {Originally at the 4th Space Imaging Workshop, Georgia Tech, 2024}
+}
+
+@inproceedings{mantes2026muvit,
+  title     = {{MuViT}: Multi-Resolution Vision Transformers for Learning Across Scales in Microscopy},
+  author    = {Albert Dominguez Mantes and Gioele {La Manno} and Martin Weigert},
+  booktitle = CVPR,
+  pages     = {13648--13657},
+  year      = {2026}
+}
+
+@inproceedings{xiao2021early,
+  title     = {Early Convolutions Help Transformers See Better},
+  author    = {Tete Xiao and Mannat Singh and Eric Mintun and Trevor Darrell and Piotr Doll{\'a}r and Ross Girshick},
+  booktitle = NIPS,
+  volume    = {34},
+  pages     = {30392--30400},
+  year      = {2021},
+  note      = {arXiv:2106.14881}
+}
+
+% ---------------------------------------------------------------------------
+% JEPA / latent-prediction models for remote sensing
+% ---------------------------------------------------------------------------
+
+@article{li2024predicting,
+  title     = {Predicting Gradient is Better: Exploring Self-Supervised Learning for {SAR} {ATR} with a Joint-Embedding Predictive Architecture},
+  author    = {Weijie Li and Wei Yang and Tianpeng Liu and Yuenan Hou and Yuxuan Li and Zhen Liu and Yongxiang Liu and Li Liu},
+  journal   = {ISPRS Journal of Photogrammetry and Remote Sensing},
+  volume    = {218},
+  pages     = {326--338},
+  year      = {2024},
+  doi       = {10.1016/j.isprsjprs.2024.09.013},
+  note      = {SAR-JEPA. arXiv:2311.15153}
+}
+
+@inproceedings{choudhury2025rejepa,
+  title     = {{REJEPA}: A Novel Joint-Embedding Predictive Architecture for Efficient Remote Sensing Image Retrieval},
+  author    = {Shabnam Choudhury and Yash Salunkhe and Sarthak Mehrotra and Biplab Banerjee},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) Workshops},
+  pages     = {2398--2407},
+  year      = {2025},
+  note      = {EarthVision workshop. arXiv:2504.03169}
+}
+
+@inproceedings{choudhury2026x,
+  title     = {{X-JEPA}: A Novel Joint Learning Cross-Modal Predictive Alignment Framework for Remote Sensing Image Retrieval},
+  author    = {Shabnam Choudhury and Yash Salunkhe and Vaibhav Rajan and Subhasis Chaudhuri and Biplab Banerjee},
+  booktitle = {Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)},
+  pages     = {4355--4364},
+  year      = {2026},
+  doi       = {10.1109/WACV61042.2026.00424}
+}
+
+@article{hossain2026cr,
+  title     = {{CR-JEPA}: Cross-Modal Joint-Embedding Predictive Learning for Remote Sensing Image Retrieval},
+  author    = {Md Aminur Hossain and Ayush V. Patel and Nitant Dube and Biplab Banerjee},
+  journal   = {arXiv preprint arXiv:2606.00706},
+  year      = {2026}
+}
+
+@article{hossain2026hq,
+  title     = {{HQ-JEPA}: Hybrid Quantum Joint-Embedding Predictive Architecture for Cross-Modal Remote Sensing Representation Learning},
+  author    = {Md Aminur Hossain and Ayush V. Patel and Sanjay K. Singh and Biplab Banerjee},
+  journal   = {arXiv preprint arXiv:2605.31068},
+  year      = {2026}
+}
+
+@article{hossain2026alignjepa,
+  title     = {{AlignJEPA}: Predictive Vision-Language Alignment for Remote Sensing Foundation Models},
+  author    = {Md Aminur Hossain and Omkumar Vaghasiya and Rajeev Ranjan Dwivedi and Vinod Kurmi and Biplab Banerjee},
+  journal   = {arXiv preprint arXiv:2608.15456},
+  year      = {2026}
+}
+
+@article{junghare2026ua,
+  title     = {{UA-JEPA}: Uncertainty-Aware Joint-Embedding Predictive Learning for Remote Sensing Image Retrieval},
+  author    = {Aniket Junghare and Biplab Banerjee},
+  journal   = {Pattern Recognition Letters},
+  volume    = {208},
+  pages     = {238--244},
+  year      = {2026},
+  doi       = {10.1016/j.patrec.2026.08.007}
+}
+
+@article{aitalibraham2026spectralearth,
+  title     = {{SpectralEarth-FM}: Bringing Hyperspectral Imagery into Multimodal {Earth} Observation Pretraining},
+  author    = {Nassim {Ait Ali Braham} and Aaron Banze and Conrad M. Albrecht and Julien Mairal and Jocelyn Chanussot and Xiao Xiang Zhu},
+  journal   = {arXiv preprint arXiv:2605.21075},
+  year      = {2026}
+}
+
+@article{hasan2026geomeld,
+  title     = {{GeoMeld}: Toward Semantically Grounded Foundation Models for Remote Sensing},
+  author    = {Maram Hasan and Md Aminur Hossain and Savitra Roy and Souparna Bhowmik and Ayush V. Patel and Mainak Singha and Subhasis Chaudhuri and Muhammad Haris Khan and Biplab Banerjee},
+  journal   = {arXiv preprint arXiv:2604.10591},
+  year      = {2026},
+  note      = {arXiv comment: accepted at a CVPR 2026 workshop}
+}
+
+@article{komurcu2026sat,
+  title     = {{Sat-JEPA-Diff}: Bridging Self-Supervised Learning and Generative Diffusion for Remote Sensing},
+  author    = {Kursat Komurcu and Linas Petkevicius},
+  journal   = {arXiv preprint arXiv:2603.13943},
+  year      = {2026},
+  note      = {4th ICLR 2026 Workshop on Machine Learning for Remote Sensing (ML4RS)}
+}
+
+@article{woldesenbet2026t,
+  title     = {{T-SAR-JEPA}: Self-Supervised Temporal Anomaly Detection in {SAR} Amplitude Stacks via Latent Prediction},
+  author    = {Kerod Woldesenbet and Abem Woldesenbet},
+  journal   = {arXiv preprint arXiv:2606.05700},
+  year      = {2026},
+  note      = {arXiv comment: to appear in IGARSS 2026}
+}
+
+@article{lundqvist2025geojepa,
+  title     = {{GeoJEPA}: Towards Eliminating Augmentation- and Sampling Bias in Multimodal Geospatial Learning},
+  author    = {Theodor Lundqvist and Ludvig Delvret},
+  journal   = {arXiv preprint arXiv:2503.05774},
+  year      = {2025},
+  note      = {Master's thesis, Lund University (LU-CS-EX: 2025-01)}
+}
+
+@article{bhaumik2026jedi,
+  title     = {{JEDI}: {JEPA}-to-Edge Distillation for Efficient Cropland Segmentation from Satellite Imagery},
+  author    = {Kishor Kumar Bhaumik and Nicolas {Roque dos Santos} and Jia Chen and Evangelos E. Papalexakis},
+  journal   = {arXiv preprint arXiv:2609.07915},
+  year      = {2026}
+}
+
+@article{albughdadi2026from,
+  title     = {From Surface Forecasting to Observability Forecasting: A Latent World Model for Cloud-Aware {EO} Monitoring},
+  author    = {Mohanad Albughdadi},
+  journal   = {arXiv preprint arXiv:2607.13651},
+  year      = {2026}
+}
+
+% ---------------------------------------------------------------------------
+% Planetary (Moon / Mars) foundation models -- closely related to LeLunar
+% ---------------------------------------------------------------------------
+
+@article{fraccaro2026multimodal,
+  title     = {Multimodal-Multiresolution Foundation Model for Lunar Remote Sensing},
+  author    = {Paolo Fraccaro and Gabby Nyirjesy and Daniela Szwarcman and Himanshu Patil and Vishal Gaur and Rohit Lal and Rachel A. Slank and Geoffrey Dawson and Hiyam Debary and Michael K. Barker and Andrew Annex and Vishnu Viswanathan and others},
+  journal   = {arXiv preprint arXiv:2609.13283},
+  year      = {2026},
+  note      = {NASA-IBM Lunar FM, pretrained on SomBench}
+}
+
+@article{gironamata2026lunarfm,
+  title     = {{LunarFM}: A Shared Multimodal Representation of the {Moon}'s Surface},
+  author    = {Marc Girona-Mata and Jakob Gawlikowski and Sumit Goski and Gautier {Bardi de Fourtou} and Valentin T. Bickel and Ben Moseley and Abigail Calzada-Diaz and Sylvester Kaczmarek and Ra{\'u}l Ramos-Poll{\'a}n},
+  journal   = {arXiv preprint arXiv:2607.22408},
+  year      = {2026}
+}
+
+@article{sander2026moon,
+  title     = {The {Moon}'s Many Faces: A Single Unified Transformer for Multimodal Lunar Reconstruction},
+  author    = {Tom Sander and Moritz Tenthoff and Kay Wohlfarth and Christian W{\"o}hler},
+  journal   = {ISPRS Journal of Photogrammetry and Remote Sensing},
+  volume    = {236},
+  pages     = {363--379},
+  year      = {2026},
+  doi       = {10.1016/j.isprsjprs.2026.04.008},
+  note      = {arXiv:2505.05644}
+}
+
+@inproceedings{purohit2026momo,
+  title     = {{MOMO}: {Mars} Orbital {MOdel} Foundation Model for {Mars} Orbital Applications},
+  author    = {Mirali Purohit and Bimal Gajera and Irish Mehta and Bhanu Tokas and Jacob Adler and Steven Lu and Scott Dickenshied and Serina Diniega and Brian Bue and Umaa Rebbapragada and Hannah Kerner},
+  booktitle = CVPR,
+  pages     = {27772--27782},
+  year      = {2026},
+  note      = {arXiv:2604.02719}
+}
+
+% ---------------------------------------------------------------------------
+% Acquisition / illumination geometry in EO models
+% ---------------------------------------------------------------------------
+
+@inproceedings{derksen2021shadow,
+  title     = {Shadow Neural Radiance Fields for Multi-View Satellite Photogrammetry},
+  author    = {Dawa Derksen and Dario Izzo},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) Workshops},
+  pages     = {1152--1161},
+  year      = {2021},
+  note      = {S-NeRF, EarthVision workshop. arXiv:2104.09877}
+}
+
+@inproceedings{mari2022sat,
+  title     = {{Sat-NeRF}: Learning Multi-View Satellite Photogrammetry With Transient Objects and Shadow Modeling Using {RPC} Cameras},
+  author    = {Roger Mar{\'\i} and Gabriele Facciolo and Thibaud Ehret},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) Workshops},
+  pages     = {1311--1321},
+  year      = {2022},
+  note      = {EarthVision workshop. arXiv:2203.08896}
+}
+
+% ---------------------------------------------------------------------------
+% Benchmarks and position papers
+% ---------------------------------------------------------------------------
+
+@inproceedings{lacoste2023geo,
+  title     = {{GEO-Bench}: Toward Foundation Models for {Earth} Monitoring},
+  author    = {Alexandre Lacoste and Nils Lehmann and Pau Rodriguez and Evan David Sherwin and Hannah Kerner and Bj{\"o}rn L{\"u}tjens and Jeremy Andrew Irvin and David Dao and Hamed Alemohammad and Alexandre Drouin and Mehmet Gunturkun and Gabriel Huang and David Vazquez and Dava Newman and Yoshua Bengio and Stefano Ermon and Xiao Xiang Zhu},
+  booktitle = NIPS,
+  volume    = {36},
+  pages     = {51080--51093},
+  year      = {2023},
+  note      = {Datasets and Benchmarks Track. arXiv:2306.03831}
+}
+
+@article{marsocci2026pangaea,
+  title     = {{PANGAEA}: Assessing Geospatial Foundation Models Capabilities through a Global and Inclusive Benchmark},
+  author    = {Valerio Marsocci and Yuru Jia and Georges {Le Bellier} and David Kerekes and Liang Zeng and Sebastian Hafner and Sebastian Gerard and Eric Brune and Ritu Yadav and Ali Shibli and Heng Fang and Yifang Ban and Maarten Vergauwen and Nicolas Audebert and Andrea Nascetti},
+  journal   = {IEEE Geoscience and Remote Sensing Magazine},
+  volume    = {14},
+  number    = {1},
+  pages     = {245--285},
+  year      = {2026},
+  doi       = {10.1109/MGRS.2025.3628194},
+  note      = {arXiv:2412.04204 (2024, titled "PANGAEA: A Global and Inclusive Benchmark for Geospatial Foundation Models")}
+}
+
+@inproceedings{rolf2024position,
+  title     = {Position: Mission Critical -- Satellite Data is a Distinct Modality in Machine Learning},
+  author    = {Esther Rolf and Konstantin Klemmer and Caleb Robinson and Hannah Kerner},
+  booktitle = {ICML},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {235},
+  pages     = {42691--42706},
+  year      = {2024},
+  note      = {arXiv:2402.01444}
+}
+
+% ---------------------------------------------------------------------------
+% Geographic location encoders
+% ---------------------------------------------------------------------------
+
+@inproceedings{macaodha2019presence,
+  title     = {Presence-Only Geographical Priors for Fine-Grained Image Classification},
+  author    = {Oisin {Mac Aodha} and Elijah Cole and Pietro Perona},
+  booktitle = ICCV,
+  year      = {2019},
+  note      = {arXiv:1906.05272}
+}
+
+@inproceedings{mai2020multi,
+  title     = {Multi-Scale Representation Learning for Spatial Feature Distributions using Grid Cells},
+  author    = {Gengchen Mai and Krzysztof Janowicz and Bo Yan and Rui Zhu and Ling Cai and Ni Lao},
+  booktitle = ICLR,
+  year      = {2020},
+  note      = {Space2Vec. arXiv:2003.00824}
+}
+
+@article{mai2022review,
+  title     = {A Review of Location Encoding for {GeoAI}: Methods and Applications},
+  author    = {Gengchen Mai and Krzysztof Janowicz and Yingjie Hu and Song Gao and Bo Yan and Rui Zhu and Ling Cai and Ni Lao},
+  journal   = {International Journal of Geographical Information Science},
+  volume    = {36},
+  number    = {4},
+  pages     = {639--673},
+  year      = {2022},
+  doi       = {10.1080/13658816.2021.2004602},
+  note      = {arXiv:2111.04006}
+}
+
+@article{mai2023sphere2vec,
+  title     = {{Sphere2Vec}: A General-Purpose Location Representation Learning over a Spherical Surface for Large-Scale Geospatial Predictions},
+  author    = {Gengchen Mai and Yao Xuan and Wenyun Zuo and Yutong He and Jiaming Song and Stefano Ermon and Krzysztof Janowicz and Ni Lao},
+  journal   = {ISPRS Journal of Photogrammetry and Remote Sensing},
+  volume    = {202},
+  pages     = {439--462},
+  year      = {2023},
+  doi       = {10.1016/j.isprsjprs.2023.06.016},
+  note      = {arXiv:2201.10489 (v1, five authors, different subtitle)}
+}
+
+@inproceedings{mai2023csp,
+  title     = {{CSP}: Self-Supervised Contrastive Spatial Pre-Training for Geospatial-Visual Representations},
+  author    = {Gengchen Mai and Ni Lao and Yutong He and Jiaming Song and Stefano Ermon},
+  booktitle = {ICML},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {202},
+  pages     = {23498--23515},
+  year      = {2023},
+  note      = {arXiv:2305.01118}
+}
+
+@inproceedings{cole2023spatial,
+  title     = {Spatial Implicit Neural Representations for Global-Scale Species Mapping},
+  author    = {Elijah Cole and Grant {Van Horn} and Christian Lange and Alexander Shepard and Patrick Leary and Pietro Perona and Scott Loarie and Oisin {Mac Aodha}},
+  booktitle = {ICML},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {202},
+  pages     = {6320--6342},
+  year      = {2023},
+  note      = {SINR. arXiv:2306.02564}
+}
+
+@inproceedings{vivancocepeda2023geoclip,
+  title     = {{GeoCLIP}: Clip-Inspired Alignment between Locations and Images for Effective Worldwide Geo-localization},
+  author    = {{Vivanco Cepeda}, Vicente and Nayak, Gaurav Kumar and Shah, Mubarak},
+  booktitle = NIPS,
+  volume    = {36},
+  pages     = {8690--8701},
+  year      = {2023},
+  note      = {arXiv:2309.16020}
+}
+
+@inproceedings{russwurm2024geographic,
+  title     = {Geographic Location Encoding with Spherical Harmonics and Sinusoidal Representation Networks},
+  author    = {Marc Ru{\ss}wurm and Konstantin Klemmer and Esther Rolf and Robin Zbinden and Devis Tuia},
+  booktitle = ICLR,
+  year      = {2024},
+  note      = {Spotlight. arXiv:2310.06743}
+}
+
+@inproceedings{klemmer2025satclip,
+  title     = {{SatCLIP}: Global, General-Purpose Location Embeddings with Satellite Imagery},
+  author    = {Konstantin Klemmer and Esther Rolf and Caleb Robinson and Lester Mackey and Marc Ru{\ss}wurm},
+  booktitle = {Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume    = {39},
+  number    = {4},
+  pages     = {4347--4355},
+  year      = {2025},
+  doi       = {10.1609/aaai.v39i4.32457},
+  note      = {arXiv:2311.17179}
+}
+
+@inproceedings{wu2024torchspatial,
+  title     = {{TorchSpatial}: A Location Encoding Framework and Benchmark for Spatial Representation Learning},
+  author    = {Nemin Wu and Qian Cao and Zhangyu Wang and Zeping Liu and Yanlin Qi and Jielu Zhang and Joshua Ni and Xiaobai Yao and Hongxu Ma and Lan Mu and Stefano Ermon and Tanuja Ganu and Akshay Nambi and Ni Lao and Gengchen Mai},
+  booktitle = NIPS,
+  volume    = {37},
+  pages     = {81437--81460},
+  year      = {2024},
+  note      = {Datasets and Benchmarks Track. arXiv:2406.15658}
+}
+
+@inproceedings{dhakal2025range,
+  title     = {{RANGE}: Retrieval Augmented Neural Fields for Multi-Resolution Geo-Embeddings},
+  author    = {Aayush Dhakal and Srikumar Sastry and Subash Khanal and Adeel Ahmad and Eric Xing and Nathan Jacobs},
+  booktitle = CVPR,
+  pages     = {24680--24689},
+  year      = {2025},
+  note      = {arXiv:2502.19781}
+}
+
+@article{cai2025no,
+  title     = {No Location Left Behind: Measuring and Improving the Fairness of Implicit Representations for {Earth} Data},
+  author    = {Daniel Cai and Randall Balestriero},
+  journal   = {arXiv preprint arXiv:2502.06831},
+  year      = {2025}
+}
+
+@article{lane2026sled,
+  title     = {{SLED}: Scalable Location Encoding via Distillation},
+  author    = {Kevin Lane and Zhongying Wang and Esther Rolf and Morteza Karimzadeh},
+  journal   = {arXiv preprint arXiv:2608.06612},
+  year      = {2026}
+}
+
+@inproceedings{rao2026measuring,
+  title     = {Measuring the Intrinsic Dimension of {Earth} Representations},
+  author    = {Arjun Rao and Marc Ru{\ss}wurm and Konstantin Klemmer and Esther Rolf},
+  booktitle = ICLR,
+  year      = {2026},
+  note      = {arXiv:2511.02101}
+}
+
+@inproceedings{rao2026localized,
+  title     = {Localized, High-resolution Geographic Representations with {Slepian} Functions},
+  author    = {Arjun Rao and Ruth Crasto and Tessa Ooms and David Rolnick and Konstantin Klemmer and Marc Ru{\ss}wurm},
+  booktitle = {ICML},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {306},
+  pages     = {103850--103873},
+  year      = {2026},
+  note      = {arXiv:2602.00392. Code: https://github.com/arjunarao619/SlepianPosEnc}
+}
+
+% ---------------------------------------------------------------------------
+% Slepian functions and spherical-harmonic tooling
+% ---------------------------------------------------------------------------
+
+@article{simons2006spatiospectral,
+  title     = {Spatiospectral Concentration on a Sphere},
+  author    = {Frederik J. Simons and F. A. Dahlen and Mark A. Wieczorek},
+  journal   = {SIAM Review},
+  volume    = {48},
+  number    = {3},
+  pages     = {504--536},
+  year      = {2006},
+  doi       = {10.1137/S0036144504445765},
+  note      = {arXiv:math/0408424}
+}
+
+@article{simons2006spherical,
+  title     = {Spherical {Slepian} Functions and the Polar Gap in Geodesy},
+  author    = {Frederik J. Simons and F. A. Dahlen},
+  journal   = {Geophysical Journal International},
+  volume    = {166},
+  number    = {3},
+  pages     = {1039--1061},
+  year      = {2006},
+  doi       = {10.1111/j.1365-246X.2006.03065.x}
+}
+
+@article{wieczorek2005localized,
+  title     = {Localized Spectral Analysis on the Sphere},
+  author    = {Mark A. Wieczorek and Frederik J. Simons},
+  journal   = {Geophysical Journal International},
+  volume    = {162},
+  number    = {3},
+  pages     = {655--675},
+  year      = {2005},
+  doi       = {10.1111/j.1365-246X.2005.02687.x}
+}
+
+@article{bates2017efficient,
+  title     = {Efficient Computation of {Slepian} Functions for Arbitrary Regions on the Sphere},
+  author    = {Alice P. Bates and Zubair Khalid and Rodney A. Kennedy},
+  journal   = {IEEE Transactions on Signal Processing},
+  volume    = {65},
+  number    = {16},
+  pages     = {4379--4393},
+  year      = {2017},
+  doi       = {10.1109/TSP.2017.2712122}
+}
+
+@article{wieczorek2018shtools,
+  title     = {{SHTools}: Tools for Working with Spherical Harmonics},
+  author    = {Mark A. Wieczorek and Matthias Meschede},
+  journal   = {Geochemistry, Geophysics, Geosystems},
+  volume    = {19},
+  number    = {8},
+  pages     = {2574--2592},
+  year      = {2018},
+  doi       = {10.1029/2018GC007529}
+}

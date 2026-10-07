@@ -1,0 +1,93 @@
+% Overview figure: (a) per-product stems map every raster to the same token grid,
+% (b) the world model: observations -> encoder -> evidence; predictor told the target
+% product and its geometry; state head tied to the EMA projection of the targets.
+\begin{tikzpicture}[
+    font=\footnotesize,
+    >={Stealth[length=1.6mm]},
+    box/.style={draw, rounded corners=2pt, align=center, inner sep=3pt, minimum height=0.9cm},
+    enc/.style={box, fill=blue!8, minimum width=1.9cm},
+    pred/.style={box, fill=orange!12, minimum width=2.2cm},
+    ema/.style={box, fill=gray!10, minimum width=1.9cm, dashed},
+    lab/.style={font=\scriptsize, align=center},
+    plab/.style={font=\scriptsize, fill=white, inner sep=1pt},
+  ]
+
+  % Token grid: \tgrid{x}{y}{cells-1}{size}{fill}{masked border?}
+  \newcommand{\tgrid}[6]{%
+    \foreach \i in {0,...,#3} {\foreach \j in {0,...,#3} {%
+      \pgfmathsetmacro{\m}{#6 && (\i<1 || \j>#3-1)}%
+      \ifdim\m pt>0.5pt
+        \fill[gray!45] ({#1+\i*#4},{#2+\j*#4}) rectangle ++(#4,#4);
+      \else
+        \fill[#5] ({#1+\i*#4},{#2+\j*#4}) rectangle ++(#4,#4);
+      \fi
+      \draw[white, line width=0.25pt] ({#1+\i*#4},{#2+\j*#4}) rectangle ++(#4,#4);
+    }}}
+  % Raster with n x n pixels: \raster{x}{y}{n}{side}{color}
+  \newcommand{\raster}[5]{%
+    \pgfmathsetmacro{\px}{#4/#3}
+    \foreach \i in {1,...,#3} {\foreach \j in {1,...,#3} {%
+      \pgfmathsetmacro{\v}{int(50+25*sin(\i*47+\j*29)*cos(\i*13-\j*31)+15*sin(\j*71))}%
+      \fill[#5!\v!white] ({#1+(\i-1)*\px},{#2+(\j-1)*\px}) rectangle ++(\px,\px);
+    }}
+    \draw[black!60] (#1,#2) rectangle ++(#4,#4);}
+
+  % ---------------- (a) one token, one ground cell ----------------
+  \node[lab, anchor=west] at (-0.2,3.9) {\textbf{(a)} one token, one ground cell};
+  \raster{0}{2.1}{16}{1.05}{brown}
+  \raster{0}{0.85}{10}{1.05}{blue}
+  \raster{0}{-0.4}{4}{1.05}{teal}
+  \node[lab, anchor=west] at (1.1,2.62) {DTM\\60\,m, 1000\,px};
+  \node[lab, anchor=west] at (1.1,1.37) {WAC\\100\,m, 600\,px};
+  \node[lab, anchor=west] at (1.1,0.12) {roughness\\1\,km, 60\,px};
+  \draw[->] (2.75,2.62) -- node[plab, pos=0.5] {$p{=}16$} (4.0,1.62);
+  \draw[->] (2.75,1.37) -- node[plab, pos=0.5] {$p{=}9$} (4.0,1.3);
+  \draw[->] (2.75,0.12) -- node[plab, pos=0.5] {$p{=}4$} (4.0,0.98);
+  \tgrid{4.1}{0.7}{7}{0.15}{blue!30}{0}
+  \node[lab] at (4.7,0.3) {$G{\times}G$ tokens,\\$E/G$ per cell};
+
+  % ---------------- (b) world model ----------------
+  \begin{scope}[xshift=0.7cm]
+  \node[lab, anchor=west] at (5.2,3.9) {\textbf{(b)} estimate the state from observations, predict another product under its sun};
+
+  % source branch (K observations)
+  \raster{5.45}{2.05}{16}{0.95}{brown}
+  \raster{5.3}{1.9}{10}{0.95}{teal}
+  \node[lab] at (5.82,1.62) {observations $X_{1..K}$};
+  \draw[->] (6.45,2.42) -- node[above, lab] {$\phi_m$} (6.95,2.42);
+  \tgrid{7.0}{1.85}{7}{0.145}{brown!35}{1}
+  \node[lab] at (7.58,1.55) {masked};
+  \node[lab] at (7.58,3.2) {$+\,\mu_m+\eta(g_m)$};
+  \draw[->] (8.25,2.42) -- (8.65,2.42);
+  \node[enc] (enc) at (9.6,2.42) {encoder $f_\theta$\\ViT-B, MoE};
+  \draw[->] (enc.east) -- node[above, lab] {evidence $z$} (11.35,2.42);
+
+  % state head
+  \node[box, fill=green!10, minimum height=0.55cm, font=\scriptsize] (wh) at (10.75,1.3) {state head $\to \hat w$};
+  \draw[->] (10.75,2.42) -- (wh.north);
+  \node[lab, text=gray, anchor=north] at (10.75,0.98) {$\mathcal{L}_{\text{state}}$};
+
+  % predictor
+  \node[pred] (pr) at (12.5,2.42) {predictor $g_\psi$\\cross + self attn.};
+  \node[lab] (q) at (12.5,3.45) {queries: $q + \mu_t$ at every cell};
+  \draw[->] (q) -- (pr.north);
+  \node[box, fill=yellow!20, minimum height=0.6cm] (sun) at (12.5,0.75) {geometry $g_t$ $\to c_t$};
+  \draw[->] (sun) -- node[right, lab, pos=0.45] {AdaLN\\+ kv token} (pr.south);
+  \draw[->] (pr.east) -- (13.9,2.42);
+  \tgrid{14.0}{1.85}{7}{0.145}{orange!45}{0}
+  \node[lab] at (14.58,3.2) {$\hat z^{\,l}_t$};
+
+  % target branch
+  \raster{5.3}{-0.35}{10}{1.05}{blue}
+  \node[lab] at (5.82,-0.62) {target $X_t$ (WAC, sun $g_t$)};
+  \draw[->] (6.45,0.17) -- node[above, lab] {$\bar\phi_t$} (6.95,0.17);
+  \tgrid{7.0}{-0.4}{7}{0.145}{blue!30}{0}
+  \draw[->] (8.25,0.17) -- (8.65,0.17);
+  \node[ema] (tenc) at (9.6,0.17) {EMA encoder\\$f_{\bar\theta}$ (full grid)};
+  \draw[->] (tenc.east) -- (10.3,0.17) |- (11.2,-0.15) -- (13.9,-0.15);
+  \tgrid{14.0}{-0.7}{7}{0.145}{blue!30}{0}
+  \node[lab] at (14.58,-1.0) {$\LN(\bar z^{\,l}_t)$};
+  \draw[<->, thick, red!70!black] (15.3,2.42) to[bend left=35] node[right, lab, text=red!70!black] {$\mathcal{L}_{\text{obs}}$\\4 depths} (15.3,-0.15);
+  \draw[->, dashed, gray] (enc.south) ++(-0.6,0) -- node[left, lab, text=gray] {EMA} ++(0,-1.25);
+  \end{scope}
+\end{tikzpicture}

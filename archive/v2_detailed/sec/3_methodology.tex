@@ -1,0 +1,157 @@
+\section{Method}
+\label{sec:method}
+
+We first describe the data and the model (\cref{sec:data,sec:task,sec:tokens,sec:encoder,sec:predictor,sec:objective}), then state five hypotheses about what the objective learns and how it fails (\cref{sec:h1,sec:h2,sec:h3,sec:monitor,sec:h5}). \Cref{sec:experiments} tests them.
+
+\subsection{Co-registered lunar footprints}
+\label{sec:data}
+
+Our data are 60\,km $\times$ 60\,km footprints of the lunar surface, with every available orbital product cut to the same ground extent and map projection. A footprint appears once per Wide Angle Camera (WAC) observation, so its static maps are paired with images taken under different suns. The full set has 10,629 footprints and 476,635 rows. \Cref{tab:modalities} lists the products, from 60\,m per pixel (topography, Kaguya Multiband Imager) to 1\,km (LOLA roughness). Diviner bolometric temperature and GRAIL gravity are too coarse to tokenize and serve only as an auxiliary target (\cref{sec:objective}). Each WAC row stores the incidence, emission and phase angles and the sub-solar azimuth, latitude and longitude of the acquisition. Splits follow Lunar Transverse Mercator zones, so that no validation footprint overlaps a training one. We exclude polar footprints. \TODO{non-polar split counts}
+
+Values outside gross physical bounds are marked missing, the rest are clipped to ranges set by instrument scientists, and heavy-tailed products are log-transformed. Rasters larger than $S_{\max}$ pixels per side are area-averaged down, ignoring missing pixels. Every band is standardized with training statistics, and missing pixels are then set to zero, the mean.
+
+\begin{table}[t]
+  \centering
+  \footnotesize
+  \setlength{\tabcolsep}{2.1pt}
+  \caption{Products used in this paper. $r$: native ground sample distance. $C$: bands. $p$: native pixels per token at $G{=}64$ and $S_{\max}{=}1000$, before and after a kernel floor of 4 (\cref{sec:tokens}). $^\star$The appearance depends on the sun, and each observation carries its illumination angles. The lower block joins in the 12-product runs.}
+  \label{tab:modalities}
+  \begin{tabular}{@{}llrcc@{}}
+    \toprule
+    Product & Source & $r$ (m) & $C$ & $p$ \\
+    \midrule
+    WAC visible$^\star$       & LROC WAC~\cite{robinson2010lunar}      & 100  & 5    & 9 \\
+    WAC ultraviolet$^\star$   & LROC WAC                               & 500  & 2    & 2 $\to$ 4 \\
+    Elevation                 & SLDEM2015~\cite{barker2016new}         & 60   & 1    & 16 \\
+    Slope; aspect             & from elevation                         & 60   & 1; 2 & 16 \\
+    643\,nm mosaic            & WAC normalized~\cite{boyd2012lunar}    & 100  & 1    & 9 \\
+    Roughness                 & LOLA~\cite{kreslavsky2013lunar}        & 1000 & 1    & 1 $\to$ 4 \\
+    \midrule
+    Morphologic mosaic        & WAC~\cite{speyerer2011lunar}           & 100  & 1    & 9 \\
+    Normalized reflectance    & WAC normalized~\cite{boyd2012lunar}    & 500  & 7    & 2 $\to$ 4 \\
+    MI reflectance            & SELENE MI~\cite{lemelin2016global}     & 60   & 8    & 16 \\
+    MI mineralogy             & SELENE MI~\cite{lemelin2016global}     & 60   & 7    & 16 \\
+    TiO$_2$                   & WAC~\cite{sato2017lunar}               & 400  & 1    & 2 $\to$ 4 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Task}
+\label{sec:task}
+
+For each row we shuffle the available products and take the first as the source $s$ and the next $K{=}2$ as targets $t_1, t_2$. The source is encoded with part of its token grid hidden. For each target the model predicts the full token grid that an EMA of the encoder produces from the target raster, which the student never sees. It is told only which product to predict and, for WAC targets, the sun of that observation. Since each footprint has several WAC rows, the same topography must be turned into images under different suns.
+
+\subsection{One token, one ground cell}
+\label{sec:tokens}
+
+The simple alternative is to resample all products to a shared $4G\times4G$ canvas with $4\times4$ patches. At $G{=}64$ that shrinks the 1000\,px topography raster four times and the 600\,px WAC image 2.3 times, and blows the 60\,px roughness map up four times. We instead align tokens to ground cells, as OmniSat and AnySat do~\cite{astruc2024omnisat,astruc2025anysat}, and give every product $m$ its own stem $\phi_m$, whose kernel and stride equal its native pixels per token,
+\begin{equation}
+  p_m = \max\!\big(k_{\min},\ \operatorname{round}(\min(E/r_m, S_{\max})/G)\big),
+  \label{eq:ppt}
+\end{equation}
+where $E{=}60$\,km is the footprint extent. The raster is resized to $Gp_m$ pixels per side, which changes it by a few percent unless the floor below applies, and $\phi_m$ maps it to a $G\times G$ grid of $D$-dimensional tokens. Every token is then one ground cell of $E/G$ meters (940\,m at $G{=}64$), whatever the product.
+
+\paragraph{Kernel floor.} At $G{=}64$, \cref{eq:ppt} with $k_{\min}{=}1$ gives LOLA roughness one pixel per token. Each token is then a scalar times a fixed vector, so all roughness tokens lie on a line in $\mathbb{R}^D$. Such a target has rank one by construction, is easy to fit and carries little. A floor $k_{\min}{=}4$ pre-upsamples coarse products so that each token sees a $4\times4$ patch.
+
+\paragraph{Convolutional stems.} A linear patch projection~\cite{dosovitskiy2021image} must preserve edges and texture through one matrix, so we also use factorized convolutional stems~\cite{xiao2021early}. $p_m$ is factored into stride-3 and stride-2 stages ($9{=}3{\cdot}3$, $16{=}2^4$, $4{=}2^2$), each a convolution followed by GroupNorm and GELU, with channel width doubling toward $D/2$, then a $1\times1$ projection to $D$. The usual $3\times3$ kernel with padding 1 has a quiet flaw here, a case of the receptive-field offsets that stride and padding produce~\cite{araujo2019computing,alsallakh2021mind}. It centers output $o$ of a stride-$s$ stage on input pixel $so$ rather than on the center $so+(s{-}1)/2$ of its cell. The shifts add up across stages to
+\begin{equation}
+  \delta_m = -\frac{p_m-1}{2p_m}\ \text{cells},
+  \label{eq:shift}
+\end{equation}
+which is $-0.38$, $-0.44$ and $-0.47$ of a token for $p_m = 4, 9, 16$. Because the shift depends on $p_m$, tokens of different products refer to ground up to 0.09 cells apart. A kernel of size $s{+}2$ with padding 1 centers the output on its cell, overlaps its neighbours at every stride and keeps the exact $G\times G$ output. We use it in all stride-2 and stride-3 stages (\cref{sec:supp_stem}).
+
+\subsection{Encoder, location and experts}
+\label{sec:encoder}
+
+The encoder $f_\theta$ is a ViT-B~\cite{dosovitskiy2021image} (12 blocks, $D{=}768$, 12 heads). Positions enter only through axial 2D rotary embeddings~\cite{su2024roformer,heo2024rotary} on queries and keys. The last four blocks replace the MLP with a sparse mixture of experts: 8 experts, top-2 routing, a router with a learned bias per product, and the V-MoE load-balancing loss~\cite{riquelme2021scaling}. A token enters the encoder as
+\begin{equation}
+  e_{m,i} = \LN\!\big(\phi_m(X_m)_i\big) + \mu_m + \lambda(\ell),
+\end{equation}
+where $\mu_m$ is a learned product embedding and $\lambda(\ell)$ encodes the footprint center $\ell$ with 1536 Slepian functions~\cite{simons2006spatiospectral,rao2026localized} (band limit 140) and an MLP. Only the tokens of the visible set $V$ reach the encoder. $V$ is one square block covering 70--80\% of the grid, drawn per batch, so 20--30\% of the source is hidden. The encoder returns layer-normalized features after blocks 3, 6, 9 and 12. A linear layer fuses them into the context $z^{\text{ctx}} \in \mathbb{R}^{|V|\times D}$.
+
+The target branch is an EMA copy of the whole input pipeline: stems, product and location embeddings, and encoder. It reads the full, unmasked target raster and returns four layer-normalized feature grids $\bar z^{\,l}_t \in \mathbb{R}^{G^2\times D}$.
+
+\subsection{A predictor that is told the sun}
+\label{sec:predictor}
+
+The predictor $g_\psi$ is a 12-layer decoder as wide as the encoder. I-JEPA keeps its predictor narrow~\cite{assran2023self}, but translating between products is harder than filling in part of one image. Its $G^2$ queries are a learned vector plus the target product embedding, made distinct by rotary embeddings of their cells. Each layer cross-attends from the queries to the context, self-attends among the queries and applies an MLP. The illumination angles $a_t$ are encoded as cosines and sines of incidence, emission, phase, sub-solar azimuth and longitude, plus sub-solar latitude and a validity bit, which is off for static targets. A small MLP turns this into a condition vector $c_t$ that sets the scale and shift of every LayerNorm in the predictor (AdaLN-Zero~\cite{peebles2023scalable}, initialized to the identity). A projection of $c_t$ is also appended to the cross-attention keys and values as one extra token. Four heads, one per supervision level, read the final query states.
+
+\subsection{Objective}
+\label{sec:objective}
+
+With $\rho$ the smooth-$\ell_1$ loss and $\LN$ a LayerNorm without affine parameters, the cross-modal loss for target $t$ is
+\begin{equation}
+  \mathcal{L}_{\text{cm}} = \frac{1}{L}\sum_{l=1}^{L} \frac{1}{G^2 D}\sum_{i,d}
+  \rho\big(\hat z^{\,l}_{t,i,d} - \LN(\sg[\bar z^{\,l}_{t,i}])_d\big),
+  \label{eq:cm}
+\end{equation}
+with $L{=}4$ and $\sg$ the stop-gradient. We add a dense context loss in the spirit of V-JEPA~2.1~\cite{murlabadia2026vjepa}. Each visible source token at every level is pulled toward the EMA encoding of the full, unmasked source at the same cell. The weight of the token depends on its distance $d_i$ (in cells) to the nearest hidden cell. V-JEPA~2.1 weights by $1/\sqrt{d_i}$; we use an exponential that decays faster:
+\begin{equation}
+  \mathcal{L}_{\text{ctx}} = \frac{1}{L}\sum_{l} \frac{1}{|V|}\sum_{i\in V} w_i\, \bar\rho\big(z^{l}_{s,i}, \LN(\bar z^{\,l}_{s,i})\big),
+  \label{eq:ctx}
+\end{equation}
+where $\bar\rho$ averages $\rho$ over features and $w_i \propto e^{-(d_i-1)/\tau}$ with $\tau{=}2$ cells, normalized to mean one. Tokens next to the hidden region, where the full view knows more than the masked one, carry most of the weight. The full objective is
+\begin{equation}
+  \mathcal{L} = \mathcal{L}_{\text{cm}} + \lambda_{\text{ctx}}\mathcal{L}_{\text{ctx}}
+  + w_v\,\mathcal{V} + w_c\,\mathcal{C} + \alpha\,\mathcal{L}_{\text{moe}} + \beta\,\mathcal{L}_{\text{cond}},
+  \label{eq:total}
+\end{equation}
+where $\mathcal{V}$ and $\mathcal{C}$ are the VICReg variance hinge and covariance penalty~\cite{bardes2022vicreg}. Both are computed on the tokens of $z^{\text{ctx}}$ and of the final-level prediction, flattened over the batch. $\mathcal{L}_{\text{cond}}$ is an $\ell_1$ loss for a small head that regresses the footprint-mean Diviner temperature (24 local-time bins) and GRAIL gravity from $\lambda(\ell)$. We use $\lambda_{\text{ctx}}{=}0.5$, $w_v{=}1$, $w_c \in \{0.005, 0.01\}$, $\alpha{=}10^{-3}$ and $\beta{=}0.01$. The EMA decay is 0.996, optionally ramped to 0.9995 with a cosine schedule. \Cref{sec:h3} explains why we keep the regularizer weights small and why we expect two of the terms to do harm.
+
+\subsection{What the objective should learn}
+\label{sec:h1}
+
+On an airless body the appearance of a footprint is close to a deterministic function of its topography, its albedo and the geometry of illumination and viewing. Shading follows the slope and aspect of each facet relative to the sun, shadows follow the relief along the sun's azimuth, and albedo scales the result. A predictor that must produce the latents of a WAC image from those of a DTM and a sun can succeed only if the DTM representation carries slope- and aspect-like content for the sun to act on. The reverse task rewards features that do not change with the sun, because the DTM target is the same for every observation of a footprint.
+
+\paragraph{H1.} Cross-modal latent prediction under a specified sun makes the static-product representations carry the terrain properties that determine appearance, and makes the predictor a sun-conditioned renderer in latent space. Then frozen features should transfer better to terrain tasks than those of a same-product JEPA with the same data and compute, shadows decoded from predicted image latents should follow the sun they are given, and relief read from an image should not change between observations of a footprint.
+
+\subsection{A position-code attractor}
+\label{sec:h2}
+
+Write a target token of product $t$ at cell $i$ of footprint $x$ as
+\begin{equation}
+  \bar z_t(i, x) = u(i) + m_t + l(\ell_x) + c_t(x, i),
+  \label{eq:decomp}
+\end{equation}
+a position term, a product term, a location term and the rest, which we call content. The predictor gets $u$, $m_t$ and $l$ for free: rotary embeddings give it the query cell, the query carries the target product, and the location embedding is added to every token on both paths. Only $c_t$ requires reading the source, and for many pairs it is barely predictable at the token level (a 100\,m image says little about kilometre-scale roughness). There the student can lower the loss only by shrinking $c_t$ in its own features, and the EMA target inherits what the student does. Predicting $u{+}m_t{+}l$ and letting $c_t$ fade is thus a descent direction. In a same-image JEPA the pull is weaker, because the context determines the masked target~\cite{assran2023self,bardes2024revisiting}.
+
+Rotary embeddings are relative, but our design still leaks absolute position. The illumination token sits at a fixed position $s$ outside the grid, so the logit of a query at cell $p$ to it, $x^\top W_q^\top R(s{-}p)\, W_k y$, depends on $p$ even when the query content $x$ is the same at every cell, as it is for our learned queries. Windowed attention~\cite{zhu2021long} with zero-padded border windows and zero-padded convolutions~\cite{islam2020much,kayhan2020translation} add further channels.
+
+\paragraph{H2.} A cross-modal JEPA with partly predictable targets and shared position, product and location channels admits a low-loss solution that encodes these channels and not content, training can converge to it, and absolute-position channels make it easier to reach. Then runs that favor the shortcut should reach a low loss while a linear probe of physical content fails on held-out footprints, and removing the sentinel's position, hiding the target cells from the context or dropping the location embedding from the targets should delay or prevent the collapse.
+
+\subsection{Signals and regularizers that cannot see it}
+\label{sec:h3}
+
+\Cref{eq:decomp} predicts which common health signals stay blind to a position code, and which regularizers reward it.
+\begin{itemize}[leftmargin=*,itemsep=1pt,topsep=2pt]
+  \item \emph{Loss} falls as $c_t$ fades, since whatever cannot be predicted is removed from the target.
+  \item \emph{Effective rank and token cosine gap within a tile} are computed across the positions of one tile. A position code has $G^2$ distinct tokens there and scores near the maximum on both.
+  \item \emph{VICReg variance}, the per-feature standard deviation over the flattened tokens, is met by $u(i)$ alone.
+  \item \emph{VICReg covariance} on flattened tokens splits into a within-tile part and a between-tile part, $C = C_{\text{within}} + \frac{1}{K}\sum_b (v_b - \bar v)(v_b - \bar v)^\top$, where $v_b$ is the mean token of tile $b$ among $K$ tiles. A per-tile content component makes the second term large and correlated across features. A position code makes it vanish. At fixed within-tile structure the penalty is therefore lowest, in expectation, for the shortcut (\cref{sec:supp_derivations}).
+  \item \emph{Pooled SIGReg}~\cite{balestriero2025lejepa} on tile means $\bar m$ conflicts with the scale of \cref{eq:cm}. Layer-normalized tokens give $\|\bar m\|^2 = D\,\bar c$, where $\bar c$ is the mean cosine between tokens of a tile. Matching $\mathcal{N}(0, I)$ needs $\bar c \approx 1$, that is, identical tokens within every tile, so the term can only push toward smoother tiles.
+  \item \emph{The VICReg variance hinge on predictions} asks for a per-feature standard deviation of at least $\gamma$. A calibrated prediction $\E[\bar z \mid \text{source}]$ has a standard deviation of about $\sqrt{R^2}$, where $R^2$ is the share of target variance the source explains. For weak pairs $R^2$ is small. The cheapest way to add the missing spread without raising the loss is structure the target also has and the predictor can produce without reading the source: $u$, $m_t$ and $l$.
+\end{itemize}
+
+\paragraph{H3.} The VICReg covariance penalty, a variance hinge on the predictions and pooled SIGReg do not prevent position-code collapse, and the first two push toward it. Then raising the covariance weight or keeping the hinge on the predictions should lower the cross-sample gap of \cref{sec:monitor}, and pooled SIGReg should settle at a plateau set by $\bar c$.
+
+\subsection{Cross-sample monitors}
+\label{sec:monitor}
+
+A position code looks the same in every tile, so it can only be seen by comparing tiles. Let $\tilde z = z - \frac{1}{G^2}\sum_i z_i$ denote a token grid with its tile mean removed. For prediction $\hat z_b$ and target $\bar z_b$ of sample $b$ in a micro-batch, and $\pi(b)$ another sample with the same target product, we define
+\begin{align}
+  \Delta &= \E_b\big[\cos(\tilde{\hat z}_b, \tilde{\bar z}_b) - \cos(\tilde{\hat z}_b, \tilde{\bar z}_{\pi(b)})\big], \label{eq:gap}\\
+  S &= 1 - \Delta \,/\, \E_b\big[\cos(\tilde{\hat z}_b, \tilde{\bar z}_b)\big], \label{eq:share}
+\end{align}
+where $\cos$ is averaged over the $G^2$ cells and $\bar z$ is layer-normalized. $\Delta$ measures how much better a prediction matches its own footprint than another footprint's, and $S$ is the share of the agreement that another footprint's target would have received anyway. Removing the tile mean cancels $m_t$ and $l$, which are constant within a tile, so neither product identity nor location can inflate $\Delta$. Comparing against a target of the same product also keeps product-specific texture statistics out of the gap. A position code gives $\Delta\to0$ and $S\to1$. In a dimensional collapse all targets become alike, so the agreement grows faster than the gap and $S$ should rise even if $\Delta$ does not fall. The cost is one extra cosine per target and no extra forward pass.
+
+The monitors cannot see predictions that stay specific to the footprint but lose detail within the tile, so we also log the within-tile token cosine gap. At micro-batch size one, $\pi(b)$ must come from another device or step. Being measured against each run's own EMA target, their absolute values compare only runs whose targets are alike.
+
+\paragraph{H4.} $\Delta$ and $S$ flag both collapse modes before within-sample statistics do. Then $S$ should separate runs that probes label as collapsed from healthy ones, and cross its alarm threshold before the content probe fails.
+
+\subsection{Ground-aligned tokens and dense losses}
+\label{sec:h5}
+
+The stems of \cref{sec:tokens} and the context loss of \cref{eq:ctx} are design choices, and we treat them as claims to test. A shared canvas discards detail in the fine products before any stem sees it. Native stems keep that detail, but without a floor they give the coarsest products one pixel per token and a rank-one target. The cross-modal loss constrains the context tokens only through what the predictor reads from them, while $\mathcal{L}_{\text{ctx}}$ supervises each visible token at its own cell.
+
+\paragraph{H5.} Native-resolution, ground-aligned stems with a kernel floor and centered convolution stages improve dense cross-modal alignment and dense downstream tasks over a shared resampled canvas, and so does the distance-weighted context loss. The floor should matter most for coarse products, whose targets are rank one without it. Centering should remove a fixed offset of about 0.4 cells (\cref{eq:shift}) between tokens and the ground they stand for.
+

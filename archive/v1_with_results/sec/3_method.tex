@@ -1,0 +1,96 @@
+\section{Data and model}
+\label{sec:method}
+
+\subsection{Co-registered lunar footprints}
+\label{sec:data}
+
+Our data are 60\,km $\times$ 60\,km footprints of the lunar surface, with every available orbital product cut to the same ground extent and map projection. A footprint appears once per Wide Angle Camera (WAC) observation, so its static maps are paired with images taken under different suns. The full set has 10,629 footprints and 476,635 rows. \Cref{tab:modalities} lists the products, from 60\,m per pixel (topography, Kaguya Multiband Imager) to 1\,km (LOLA roughness). Diviner bolometric temperature and GRAIL gravity are too coarse to tokenize and serve only as an auxiliary target (\cref{sec:objective}). Each WAC row stores the incidence, emission and phase angles and the sub-solar azimuth, latitude and longitude of the acquisition. Splits follow Lunar Transverse Mercator zones, so that no validation footprint overlaps a training one. We exclude polar footprints. \TODO{non-polar split counts}
+
+Values outside gross physical bounds are marked missing, the rest are clipped to ranges set by instrument scientists, and heavy-tailed products are log-transformed. Rasters larger than $S_{\max}$ pixels per side are area-averaged down, ignoring missing pixels. Every band is standardized with training statistics, and missing pixels are then set to zero, the mean.
+
+\begin{table}[t]
+  \centering
+  \footnotesize
+  \setlength{\tabcolsep}{2.1pt}
+  \caption{Products used in this paper. $r$: native ground sample distance. $C$: bands. $p$: native pixels per token at $G{=}64$ and $S_{\max}{=}1000$, before and after a kernel floor of 4 (\cref{sec:tokens}). $^\star$The appearance depends on the sun, and each observation carries its illumination angles. The lower block joins in the 12-product runs.}
+  \label{tab:modalities}
+  \begin{tabular}{@{}llrcc@{}}
+    \toprule
+    Product & Source & $r$ (m) & $C$ & $p$ \\
+    \midrule
+    WAC visible$^\star$       & LROC WAC~\cite{robinson2010lunar}      & 100  & 5    & 9 \\
+    WAC ultraviolet$^\star$   & LROC WAC                               & 500  & 2    & 2 $\to$ 4 \\
+    Elevation                 & SLDEM2015~\cite{barker2016new}         & 60   & 1    & 16 \\
+    Slope; aspect             & from elevation                         & 60   & 1; 2 & 16 \\
+    643\,nm mosaic            & WAC normalized~\cite{boyd2012lunar}    & 100  & 1    & 9 \\
+    Roughness                 & LOLA~\cite{kreslavsky2013lunar}        & 1000 & 1    & 1 $\to$ 4 \\
+    \midrule
+    Morphologic mosaic        & WAC~\cite{speyerer2011lunar}           & 100  & 1    & 9 \\
+    Normalized reflectance    & WAC normalized~\cite{boyd2012lunar}    & 500  & 7    & 2 $\to$ 4 \\
+    MI reflectance            & SELENE MI~\cite{lemelin2016global}     & 60   & 8    & 16 \\
+    MI mineralogy             & SELENE MI~\cite{lemelin2016global}     & 60   & 7    & 16 \\
+    TiO$_2$                   & WAC~\cite{sato2017lunar}               & 400  & 1    & 2 $\to$ 4 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Task}
+\label{sec:task}
+
+For each row we shuffle the available products and take the first as the source $s$ and the next $K{=}2$ as targets $t_1, t_2$. The source is encoded with part of its token grid hidden. For each target the model predicts the full token grid that an EMA of the encoder produces from the target raster, which the student never sees. It is told only which product to predict and, for WAC targets, the sun of that observation. Since each footprint has several WAC rows, the same topography must be turned into images under different suns.
+
+\subsection{One token, one ground cell}
+\label{sec:tokens}
+
+We started by resampling all products to a shared $4G\times4G$ canvas with $4\times4$ patches. At $G{=}64$ this shrinks the 1000\,px topography raster four times and the 600\,px WAC image 2.3 times, and blows the 60\,px roughness map up four times. We now align tokens to ground cells, as OmniSat and AnySat do~\cite{astruc2024omnisat,astruc2025anysat}, and give every product $m$ its own stem $\phi_m$, whose kernel and stride equal its native pixels per token,
+\begin{equation}
+  p_m = \max\!\big(k_{\min},\ \operatorname{round}(\min(E/r_m, S_{\max})/G)\big),
+  \label{eq:ppt}
+\end{equation}
+where $E{=}60$\,km is the footprint extent. The raster is resized to $Gp_m$ pixels per side, which changes it by a few percent unless the floor below applies, and $\phi_m$ maps it to a $G\times G$ grid of $D$-dimensional tokens. Every token is then one ground cell of $E/G$ meters (940\,m at $G{=}64$), whatever the product.
+
+\paragraph{Kernel floor.} At $G{=}64$, \cref{eq:ppt} with $k_{\min}{=}1$ gives LOLA roughness one pixel per token. Each token is then a scalar times a fixed vector, so all roughness tokens lie on a line in $\mathbb{R}^D$ (measured effective rank 1), a target that is easy to fit and carries little. A floor $k_{\min}{=}4$ pre-upsamples coarse products so that each token sees a $4\times4$ patch.
+
+\paragraph{Convolutional stems.} A linear patch projection~\cite{dosovitskiy2021image} must preserve edges and texture through one matrix, so our latest recipe uses factorized convolutional stems~\cite{xiao2021early}. $p_m$ is factored into stride-3 and stride-2 stages ($9{=}3{\cdot}3$, $16{=}2^4$, $4{=}2^2$), each a convolution followed by GroupNorm and GELU, with channel width doubling toward $D/2$, then a $1\times1$ projection to $D$. The usual $3\times3$ kernel with padding 1 has a quiet flaw here, a case of the receptive-field offsets that stride and padding produce~\cite{araujo2019computing,alsallakh2021mind}. It centers output $o$ of a stride-$s$ stage on input pixel $so$ rather than on the center $so+(s{-}1)/2$ of its cell. The shifts add up across stages to
+\begin{equation}
+  \delta_m = -\frac{p_m-1}{2p_m}\ \text{cells},
+  \label{eq:shift}
+\end{equation}
+which is $-0.38$, $-0.44$ and $-0.47$ of a token for $p_m = 4, 9, 16$. Because the shift depends on $p_m$, tokens of different products refer to ground up to 0.09 cells apart. A kernel of size $s{+}2$ with padding 1 centers the output on its cell, overlaps its neighbours at every stride and keeps the exact $G\times G$ output. We use it in all stride-2 and stride-3 stages (\cref{sec:supp_stem}).
+
+\subsection{Encoder, location and experts}
+
+The encoder $f_\theta$ is a ViT-B~\cite{dosovitskiy2021image} (12 blocks, $D{=}768$, 12 heads). Positions enter only through axial 2D rotary embeddings~\cite{su2024roformer,heo2024rotary} on queries and keys. The last four blocks replace the MLP with a sparse mixture of experts: 8 experts, top-2 routing, a router with a learned bias per product, and the V-MoE load-balancing loss~\cite{riquelme2021scaling}. A token enters the encoder as
+\begin{equation}
+  e_{m,i} = \LN\!\big(\phi_m(X_m)_i\big) + \mu_m + \lambda(\ell),
+\end{equation}
+where $\mu_m$ is a learned product embedding and $\lambda(\ell)$ encodes the footprint center $\ell$ with 1536 Slepian functions~\cite{simons2006spatiospectral,rao2026localized} (band limit 140) and an MLP. Only the tokens of the visible set $V$ reach the encoder. $V$ is one square block covering 70--80\% of the grid, drawn per batch, so 20--30\% of the source is hidden. The encoder returns layer-normalized features after blocks 3, 6, 9 and 12. A linear layer fuses them into the context $z^{\text{ctx}} \in \mathbb{R}^{|V|\times D}$.
+
+The target branch is an EMA copy of the whole input pipeline: stems, product and location embeddings, and encoder. It reads the full, unmasked target raster and returns four layer-normalized feature grids $\bar z^{\,l}_t \in \mathbb{R}^{G^2\times D}$.
+
+\subsection{A predictor that is told the sun}
+\label{sec:predictor}
+
+The predictor $g_\psi$ is a 12-layer decoder as wide as the encoder. I-JEPA keeps its predictor narrow~\cite{assran2023self}, but translating between products is harder than filling in part of one image. Its $G^2$ queries are a learned vector plus the target product embedding, made distinct by rotary embeddings of their cells. Each layer cross-attends from the queries to the context, self-attends among the queries and applies an MLP. The illumination angles $a_t$ are encoded as cosines and sines of incidence, emission, phase, sub-solar azimuth and longitude, plus sub-solar latitude and a validity bit, which is off for static targets. A small MLP turns this into a condition vector $c_t$ that sets the scale and shift of every LayerNorm in the predictor (AdaLN-Zero~\cite{peebles2023scalable}, initialized to the identity). A projection of $c_t$ is also appended to the cross-attention keys and values as one extra token. Four heads, one per supervision level, read the final query states.
+
+\subsection{Objective}
+\label{sec:objective}
+
+With $\rho$ the smooth-$\ell_1$ loss and $\LN$ a LayerNorm without affine parameters, the cross-modal loss for target $t$ is
+\begin{equation}
+  \mathcal{L}_{\text{cm}} = \frac{1}{L}\sum_{l=1}^{L} \frac{1}{G^2 D}\sum_{i,d}
+  \rho\big(\hat z^{\,l}_{t,i,d} - \LN(\sg[\bar z^{\,l}_{t,i}])_d\big),
+  \label{eq:cm}
+\end{equation}
+with $L{=}4$ and $\sg$ the stop-gradient. Our latest recipe adds a dense context loss in the spirit of V-JEPA~2.1~\cite{murlabadia2026vjepa}. Each visible source token at every level is pulled toward the EMA encoding of the full, unmasked source at the same cell. The weight of the token depends on its distance $d_i$ (in cells) to the nearest hidden cell. V-JEPA~2.1 weights by $1/\sqrt{d_i}$; we use an exponential that decays faster:
+\begin{equation}
+  \mathcal{L}_{\text{ctx}} = \frac{1}{L}\sum_{l} \frac{1}{|V|}\sum_{i\in V} w_i\, \bar\rho\big(z^{l}_{s,i}, \LN(\bar z^{\,l}_{s,i})\big),
+  \label{eq:ctx}
+\end{equation}
+where $\bar\rho$ averages $\rho$ over features and $w_i \propto e^{-(d_i-1)/\tau}$ with $\tau{=}2$ cells, normalized to mean one. Tokens next to the hidden region, where the full view knows more than the masked one, carry most of the weight. The full objective is
+\begin{equation}
+  \mathcal{L} = \mathcal{L}_{\text{cm}} + \lambda_{\text{ctx}}\mathcal{L}_{\text{ctx}}
+  + w_v\,\mathcal{V} + w_c\,\mathcal{C} + \alpha\,\mathcal{L}_{\text{moe}} + \beta\,\mathcal{L}_{\text{cond}},
+  \label{eq:total}
+\end{equation}
+where $\mathcal{V}$ and $\mathcal{C}$ are the VICReg variance hinge and covariance penalty~\cite{bardes2022vicreg}. Both are computed on the tokens of $z^{\text{ctx}}$ and of the final-level prediction, flattened over the batch. $\mathcal{L}_{\text{cond}}$ is an $\ell_1$ loss for a small head that regresses the footprint-mean Diviner temperature (24 local-time bins) and GRAIL gravity from $\lambda(\ell)$. We use $\lambda_{\text{ctx}}{=}0.5$, $w_v{=}1$, $w_c \in \{0.005, 0.01\}$, $\alpha{=}10^{-3}$ and $\beta{=}0.01$. The EMA decay is 0.996, optionally ramped to 0.9995 with a cosine schedule. \Cref{sec:collapse} explains why the regularizer weights are small, and why we came to distrust two of the terms.

@@ -1,0 +1,68 @@
+\clearpage
+\setcounter{page}{1}
+\maketitlesupplementary
+\appendix
+
+\section{Receptive-field offset of strided conv stems}
+\label{sec:supp_stem}
+
+Consider one stage with stride $s$, kernel $k$ and padding $q$ on a one-dimensional input of length $sn$ (pixels $0,\dots,sn{-}1$). Output $o$ reads input pixels $so{-}q,\dots,so{-}q{+}k{-}1$, so its receptive field is centered at $so - q + (k{-}1)/2$. The cell that output $o$ stands for spans pixels $so,\dots,so{+}s{-}1$, with center $so + (s{-}1)/2$. The offset of one stage is therefore
+\begin{equation}
+  \delta_1 = \frac{k-1}{2} - q - \frac{s-1}{2}.
+\end{equation}
+With $k{=}3$ and $q{=}1$, $\delta_1 = -(s{-}1)/2$ input pixels. Stacking stages with strides $s_1, \dots, s_n$ and total stride $P = \prod_j s_j$ gives, in native pixels,
+\begin{equation}
+  \delta = -\sum_{j} \Big(\prod_{i<j} s_i\Big)\frac{s_j-1}{2} = -\frac{P-1}{2},
+\end{equation}
+because the sum telescopes. In units of one token cell ($P$ pixels) this is \cref{eq:shift}. With $k{=}s{+}2$ and $q{=}1$, $\delta_1{=}0$ for every $s$, the receptive field extends one pixel beyond the cell on each side, and the output length is unchanged. At $s{=}3$ a $3\times3$ kernel reads pixels $3o{-}1,\dots,3o{+}1$, so pixel $3n{-}1$ is never read, and two such stages leave the last four of 576 columns of a WAC tile unused. Stride-2 stages read every pixel at either kernel size. \Cref{tab:supp_shift} lists the offsets for the stems used at $G{=}64$.
+
+\begin{table}[h]
+  \centering
+  \small
+  \caption{Token offset (fraction of a cell, negative is up-left) and unread border columns for the convolutional stems at $G{=}64$, from the formulas above.}
+  \label{tab:supp_shift}
+  \begin{tabular}{@{}lccc@{}}
+    \toprule
+    $p$ (strides) & kernel 3 & kernel $s{+}2$ & unread cols \\
+    \midrule
+    4 (2, 2)          & $-0.375$ & 0 & 0 \\
+    9 (3, 3)          & $-0.444$ & 0 & 4 \\
+    16 (2, 2, 2, 2)   & $-0.469$ & 0 & 0 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Derivations for \cref{sec:h3}}
+\label{sec:supp_derivations}
+
+\paragraph{Covariance of flattened tokens.} Let $z_{b,i} \in \mathbb{R}^D$ be the tokens of $K$ tiles ($b = 1..K$, $i = 1..N$), $v_b$ the mean of tile $b$ and $\bar v$ the mean over tiles. The covariance over all $KN$ tokens is
+\begin{align}
+  C &= C_{\text{within}} + C_{\text{between}}, \\
+  C_{\text{within}} &= \frac{1}{KN}\sum_{b,i}(z_{b,i}-v_b)(z_{b,i}-v_b)^\top, \\
+  C_{\text{between}} &= \frac{1}{K}\sum_b (v_b-\bar v)(v_b-\bar v)^\top.
+\end{align}
+VICReg's penalty is $\mathcal{C} = \frac{1}{D}\sum_{j\neq k} C_{jk}^2$. For a position code, $z_{b,i} = u(i)$ in every tile, so $v_b = \bar v$ and $C_{\text{between}} = 0$. If instead the tiles carry content with a per-tile component, $C_{\text{between}}$ is a sum of $K$ outer products whose off-diagonal entries are of the order of $v$, the between-tile variance per feature. When the directions of $v_b - \bar v$ are independent of $C_{\text{within}}$, the cross term between the off-diagonal parts of the two matrices vanishes in expectation, and
+\begin{equation}
+  \E[\mathcal{C}] = \mathcal{C}(C_{\text{within}}) + \E\big[\mathcal{C}(C_{\text{between}})\big] \;\geq\; \mathcal{C}(C_{\text{within}}).
+\end{equation}
+At fixed within-tile structure the penalty is therefore smallest, in expectation, when the tiles do not differ, which is the position code. The per-rank batches used in practice hold only a few tiles ($K$ is the number of target grids per device), so $C_{\text{between}}$ is low-rank and its off-diagonal energy is large relative to $v$.
+
+\paragraph{Pooled SIGReg.} Let $t_1, \dots, t_N$ be the layer-normalized tokens of a tile, so that $\|t_i\|^2 = D$, and let $\bar m = \frac{1}{N}\sum_i t_i$. Then
+\begin{equation}
+  \|\bar m\|^2 = \frac{1}{N^2}\sum_{i,j} t_i^\top t_j = D\,\bar c, \qquad \bar c = \frac{1}{N^2}\sum_{i,j}\cos(t_i, t_j).
+\end{equation}
+Under $\mathcal{N}(0, I_D)$, $\E\|\bar m\|^2 = D$, so a pooled prediction matches the SIGReg target only when $\bar c \approx 1$, that is, when all tokens of the tile are nearly identical. A prediction pinned to layer-normalized, spatially varying targets cannot satisfy it. What remains is a pressure toward smoother tiles that does not depend on whether the tile mean carries content.
+
+\paragraph{Variance hinge on predictions.} For a squared-type loss the optimal prediction is $\hat z = \E[\bar z \mid \text{source}]$, and the law of total variance gives, per feature $d$, $\operatorname{Var}(\hat z_d) = \operatorname{Var}(\bar z_d) - \E[\operatorname{Var}(\bar z_d \mid \text{source})] = R_d^2 \operatorname{Var}(\bar z_d)$. With layer-normalized targets $\operatorname{Var}(\bar z_d)\approx 1$, so the calibrated standard deviation is about $\sqrt{R_d^2}$. A hinge at $\gamma{=}1$ can be met only by adding variance beyond the calibrated part. Variance that the source does not explain raises the loss unless the target shares it. The components that every target shares, and that the predictor can produce without the source, are $u$, $m_t$ and $l$ of \cref{eq:decomp}.
+
+\section{Planned runs}
+\label{sec:supp_runs}
+
+\paragraph{Shared recipe.} Unless stated otherwise, runs use a ViT-B encoder whose last four blocks are MoE (8 experts, top-2), a 12-layer predictor of width 768, four supervision levels, a visible square block covering 70--80\% of the grid and $K{=}2$ targets per row. The VICReg variance weight is 1 on context and predictions, the covariance weight 0.005, SIGReg is off, and the EMA decay is a constant 0.996. We use AdamW with weight decay 0.05 and clipping at 1, warmup over 10\% of the schedule and cosine decay to $10^{-6}$. Ablation arms run at $G{=}32$ with seven products for 50k steps and three seeds. \TODO{list every arm with its identifier once launched}
+
+\section{Downstream protocols}
+\label{sec:supp_downstream}
+
+\paragraph{Crater detection.} Robbins 1k has 800/100/100 WAC tiles of 512\,px at 100\,m, Robbins 10k has 8000/1000/1000 tiles with a wider range of illumination, and the NAC set has 289/63/56 hand-labeled tiles of 256\,px at about 1\,m. Detectors read the frozen EMA encoder at its four supervision depths through a trainable three-level feature pyramid with FCOS heads, trained on multi-scale native crops. We report two settings: fully frozen, and with the per-product stems fine-tuned at learning rate $10^{-4}$. We score all boxes down to 2\,px with at most 300 detections. For the comparison with the NASA-IBM model we also follow its protocol: boxes with a shortest side of at least 10\,px, tiles without craters dropped, at most 500 detections, and a Faster R-CNN head family. The predicted DTM comes from a DPT head trained on the model's elevation-product predictor features, given the WAC image.
+
+\paragraph{Shape and albedo from shading.} Footprints with at least six observations are split, with a fixed seed, into a fitting and an evaluation set. Outputs are 128\,px (469\,m per pixel). The relief target is the plane-detrended 60\,m DTM. Albedo is scored against the 643\,nm mosaic and, separately, against a multi-sun pseudo-albedo. Linear probes read frozen predictor features. Shadow AUC uses the darkest-quantile pixels of the WAC image as labels, on high-incidence observations only, where dark pixels are mostly cast shadow. \TODO{IMP segmentation protocol}

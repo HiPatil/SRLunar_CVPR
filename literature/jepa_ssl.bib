@@ -1,0 +1,619 @@
+% JEPA / latent-prediction SSL, collapse, and collapse diagnostics.
+% Verified 2026-09-30 against arXiv metadata and venue listings (CVF, ECVA, NeurIPS proceedings,
+% PMLR, OpenReview). See jepa_ssl.md for per-entry verification notes.
+% Venue macros used bare: CVPR, ICCV, ECCV, NIPS, ICLR.
+
+% ---------------------------------------------------------------- JEPA family
+
+@inproceedings{assran2023self,
+  title     = {Self-Supervised Learning from Images with a Joint-Embedding Predictive Architecture},
+  author    = {Assran, Mahmoud and Duval, Quentin and Misra, Ishan and Bojanowski, Piotr and Vincent, Pascal and Rabbat, Michael and LeCun, Yann and Ballas, Nicolas},
+  booktitle = CVPR,
+  year      = {2023}
+}
+
+@article{bardes2024revisiting,
+  title   = {Revisiting Feature Prediction for Learning Visual Representations from Video},
+  author  = {Bardes, Adrien and Garrido, Quentin and Ponce, Jean and Chen, Xinlei and Rabbat, Michael and LeCun, Yann and Assran, Mido and Ballas, Nicolas},
+  journal = {Transactions on Machine Learning Research},
+  year    = {2024}
+}
+
+@article{assran2025vjepa,
+  title   = {{V-JEPA} 2: Self-Supervised Video Models Enable Understanding, Prediction and Planning},
+  author  = {Assran, Mido and Bardes, Adrien and Fan, David and Garrido, Quentin and Howes, Russell and Komeili, Mojtaba and Muckley, Matthew and Rizvi, Ammar and Roberts, Claire and Sinha, Koustuv and Zholus, Artem and Arnaud, Sergio and others},
+  journal = {arXiv preprint arXiv:2506.09985},
+  year    = {2025}
+}
+
+@article{murlabadia2026vjepa,
+  title   = {{V-JEPA} 2.1: Unlocking Dense Features in Video Self-Supervised Learning},
+  author  = {Mur-Labadia, Lorenzo and Muckley, Matthew and Bar, Amir and Assran, Mido and Sinha, Koustuv and Rabbat, Mike and LeCun, Yann and Ballas, Nicolas and Bardes, Adrien},
+  journal = {arXiv preprint arXiv:2603.14482},
+  year    = {2026}
+}
+
+@article{balestriero2025lejepa,
+  title   = {{LeJEPA}: Provable and Scalable Self-Supervised Learning Without the Heuristics},
+  author  = {Balestriero, Randall and LeCun, Yann},
+  journal = {arXiv preprint arXiv:2511.08544},
+  year    = {2025}
+}
+
+@article{maes2026leworldmodel,
+  title   = {{LeWorldModel}: Stable End-to-End Joint-Embedding Predictive Architecture from Pixels},
+  author  = {Maes, Lucas and Le Lidec, Quentin and Scieur, Damien and LeCun, Yann and Balestriero, Randall},
+  journal = {arXiv preprint arXiv:2603.19312},
+  year    = {2026}
+}
+
+@article{wu2026visreg,
+  title   = {{VISReg}: Variance-Invariance-Sketching Regularization for {JEPA} training},
+  author  = {Wu, Haiyu and Balestriero, Randall and Levine, Morgan},
+  journal = {arXiv preprint arXiv:2606.02572},
+  year    = {2026}
+}
+
+@inproceedings{mo2024connecting,
+  title     = {Connecting Joint-Embedding Predictive Architecture with Contrastive Self-supervised Learning},
+  author    = {Mo, Shentong and Tong, Shengbang},
+  booktitle = NIPS,
+  year      = {2024}
+}
+
+@article{bardes2023mcjepa,
+  title   = {{MC-JEPA}: A Joint-Embedding Predictive Architecture for Self-Supervised Learning of Motion and Content Features},
+  author  = {Bardes, Adrien and Ponce, Jean and LeCun, Yann},
+  journal = {arXiv preprint arXiv:2307.12698},
+  year    = {2023}
+}
+
+@inproceedings{littwin2024jepa,
+  title     = {How {JEPA} Avoids Noisy Features: The Implicit Bias of Deep Linear Self Distillation Networks},
+  author    = {Littwin, Etai and Saremi, Omid and Advani, Madhu and Thilak, Vimal and Nakkiran, Preetum and Huang, Chen and Susskind, Joshua},
+  booktitle = NIPS,
+  year      = {2024}
+}
+
+@inproceedings{bar2024stochastic,
+  title     = {Stochastic Positional Embeddings Improve Masked Image Modeling},
+  author    = {Bar, Amir and Bordes, Florian and Shocher, Assaf and Assran, Mido and Vincent, Pascal and Ballas, Nicolas and Darrell, Trevor and Globerson, Amir and LeCun, Yann},
+  booktitle = {ICML},
+  pages     = {2944--2958},
+  year      = {2024}
+}
+
+@article{darcet2025cluster,
+  title   = {Cluster and Predict Latent Patches for Improved Masked Image Modeling},
+  author  = {Darcet, Timoth{\'e}e and Baldassarre, Federico and Oquab, Maxime and Mairal, Julien and Bojanowski, Piotr},
+  journal = {Transactions on Machine Learning Research},
+  year    = {2025}
+}
+
+@inproceedings{littwin2024enhancing,
+  title     = {Enhancing {JEPAs} with Spatial Conditioning: Robust and Efficient Representation Learning},
+  author    = {Littwin, Etai and Thilak, Vimal and Gopalakrishnan, Anand},
+  booktitle = {NeurIPS 2024 Workshop on Self-Supervised Learning: Theory and Practice},
+  year      = {2024}
+}
+
+@article{mo2024dmtjepa,
+  title   = {{DMT-JEPA}: Discriminative Masked Targets for Joint-Embedding Predictive Architecture},
+  author  = {Mo, Shentong and Yun, Sukmin},
+  journal = {arXiv preprint arXiv:2405.17995},
+  year    = {2024}
+}
+
+@article{li2025rethinking,
+  title   = {Rethinking {JEPA}: Compute-Efficient Video {SSL} with Frozen Teachers},
+  author  = {Li, Xianhang and Huang, Chen and Li, Chun-Liang and Malach, Eran and Susskind, Josh and Thilak, Vimal and Littwin, Etai},
+  journal = {arXiv preprint arXiv:2509.24317},
+  year    = {2025}
+}
+
+@inproceedings{huang2026text,
+  title     = {Text-Conditional {JEPA} for Learning Semantically Rich Visual Representations},
+  author    = {Huang, Chen and Li, Xianhang and Thilak, Vimal and Littwin, Etai and Susskind, Joshua M.},
+  booktitle = {ICML},
+  year      = {2026}
+}
+
+@inproceedings{vanassel2025joint,
+  title     = {Joint-Embedding vs Reconstruction: Provable Benefits of Latent Space Prediction for Self-Supervised Learning},
+  author    = {Van Assel, Hugues and Ibrahim, Mark and Biancalani, Tommaso and Regev, Aviv and Balestriero, Randall},
+  booktitle = NIPS,
+  year      = {2025}
+}
+
+@article{sobal2022joint,
+  title   = {Joint Embedding Predictive Architectures Focus on Slow Features},
+  author  = {Sobal, Vlad and S V, Jyothir and Jalagam, Siddhartha and Carion, Nicolas and Cho, Kyunghyun and LeCun, Yann},
+  journal = {arXiv preprint arXiv:2211.10831},
+  year    = {2022}
+}
+
+@inproceedings{wei2024towards,
+  title     = {Towards Latent Masked Image Modeling for Self-Supervised Visual Representation Learning},
+  author    = {Wei, Yibing and Gupta, Abhinav and Morgado, Pedro},
+  booktitle = ECCV,
+  year      = {2024}
+}
+
+@article{yamada2026siamjepa,
+  title   = {{SiamJEPA}: On the Role of Siamese Student Encoders in {JEPA}},
+  author  = {Yamada, Makoto},
+  journal = {arXiv preprint arXiv:2607.04044},
+  year    = {2026}
+}
+
+% ------------------------------------------- latent-target / EMA-teacher / MIM SSL
+
+@inproceedings{baevski2022data2vec,
+  title     = {data2vec: A General Framework for Self-supervised Learning in Speech, Vision and Language},
+  author    = {Baevski, Alexei and Hsu, Wei-Ning and Xu, Qiantong and Babu, Arun and Gu, Jiatao and Auli, Michael},
+  booktitle = {ICML},
+  pages     = {1298--1312},
+  year      = {2022}
+}
+
+@inproceedings{baevski2023efficient,
+  title     = {Efficient Self-supervised Learning with Contextualized Target Representations for Vision, Speech and Language},
+  author    = {Baevski, Alexei and Babu, Arun and Hsu, Wei-Ning and Auli, Michael},
+  booktitle = {ICML},
+  pages     = {1416--1429},
+  year      = {2023}
+}
+
+@inproceedings{grill2020bootstrap,
+  title     = {Bootstrap Your Own Latent - A New Approach to Self-Supervised Learning},
+  author    = {Grill, Jean-Bastien and Strub, Florian and Altch{\'e}, Florent and Tallec, Corentin and Richemond, Pierre H. and Buchatskaya, Elena and Doersch, Carl and Avila Pires, Bernardo and Guo, Zhaohan Daniel and Gheshlaghi Azar, Mohammad and Piot, Bilal and Kavukcuoglu, Koray and Munos, R{\'e}mi and Valko, Michal},
+  booktitle = NIPS,
+  year      = {2020}
+}
+
+@inproceedings{caron2021emerging,
+  title     = {Emerging Properties in Self-Supervised Vision Transformers},
+  author    = {Caron, Mathilde and Touvron, Hugo and Misra, Ishan and J{\'e}gou, Herv{\'e} and Mairal, Julien and Bojanowski, Piotr and Joulin, Armand},
+  booktitle = ICCV,
+  year      = {2021}
+}
+
+@article{oquab2024dinov2,
+  title   = {{DINOv2}: Learning Robust Visual Features without Supervision},
+  author  = {Oquab, Maxime and Darcet, Timoth{\'e}e and Moutakanni, Th{\'e}o and Vo, Huy and Szafraniec, Marc and Khalidov, Vasil and Fernandez, Pierre and Haziza, Daniel and Massa, Francisco and El-Nouby, Alaaeldin and Assran, Mahmoud and Ballas, Nicolas and others},
+  journal = {Transactions on Machine Learning Research},
+  year    = {2024}
+}
+
+@article{simeoni2026dinov3,
+  title   = {{DINOv3}},
+  author  = {Sim{\'e}oni, Oriane and Vo, Huy V. and Seitzer, Maximilian and Baldassarre, Federico and Oquab, Maxime and Jose, Cijo and Khalidov, Vasil and Szafraniec, Marc and Yi, Seungeun and Ramamonjisoa, Micha{\"e}l and Massa, Francisco and Haziza, Daniel and others},
+  journal = {Transactions on Machine Learning Research},
+  year    = {2026}
+}
+
+@inproceedings{zhou2022ibot,
+  title     = {{iBOT}: Image {BERT} Pre-Training with Online Tokenizer},
+  author    = {Zhou, Jinghao and Wei, Chen and Wang, Huiyu and Shen, Wei and Xie, Cihang and Yuille, Alan and Kong, Tao},
+  booktitle = ICLR,
+  year      = {2022}
+}
+
+@inproceedings{he2022masked,
+  title     = {Masked Autoencoders Are Scalable Vision Learners},
+  author    = {He, Kaiming and Chen, Xinlei and Xie, Saining and Li, Yanghao and Doll{\'a}r, Piotr and Girshick, Ross},
+  booktitle = CVPR,
+  year      = {2022}
+}
+
+@inproceedings{bao2022beit,
+  title     = {{BEiT}: {BERT} Pre-Training of Image Transformers},
+  author    = {Bao, Hangbo and Dong, Li and Piao, Songhao and Wei, Furu},
+  booktitle = ICLR,
+  year      = {2022}
+}
+
+@inproceedings{wei2022masked,
+  title     = {Masked Feature Prediction for Self-Supervised Visual Pre-Training},
+  author    = {Wei, Chen and Fan, Haoqi and Xie, Saining and Wu, Chao-Yuan and Yuille, Alan and Feichtenhofer, Christoph},
+  booktitle = CVPR,
+  year      = {2022}
+}
+
+@inproceedings{chen2021exploring,
+  title     = {Exploring Simple Siamese Representation Learning},
+  author    = {Chen, Xinlei and He, Kaiming},
+  booktitle = CVPR,
+  year      = {2021}
+}
+
+@inproceedings{assran2022masked,
+  title     = {Masked Siamese Networks for Label-Efficient Learning},
+  author    = {Assran, Mahmoud and Caron, Mathilde and Misra, Ishan and Bojanowski, Piotr and Bordes, Florian and Vincent, Pascal and Joulin, Armand and Rabbat, Michael and Ballas, Nicolas},
+  booktitle = ECCV,
+  year      = {2022}
+}
+
+@inproceedings{tarvainen2017mean,
+  title     = {Mean Teachers Are Better Role Models: Weight-Averaged Consistency Targets Improve Semi-Supervised Deep Learning Results},
+  author    = {Tarvainen, Antti and Valpola, Harri},
+  booktitle = NIPS,
+  year      = {2017}
+}
+
+@inproceedings{he2020momentum,
+  title     = {Momentum Contrast for Unsupervised Visual Representation Learning},
+  author    = {He, Kaiming and Fan, Haoqi and Wu, Yuxin and Xie, Saining and Girshick, Ross},
+  booktitle = CVPR,
+  year      = {2020}
+}
+
+@inproceedings{chen2021empirical,
+  title     = {An Empirical Study of Training Self-Supervised Vision Transformers},
+  author    = {Chen, Xinlei and Xie, Saining and He, Kaiming},
+  booktitle = ICCV,
+  year      = {2021}
+}
+
+@inproceedings{chen2020simple,
+  title     = {A Simple Framework for Contrastive Learning of Visual Representations},
+  author    = {Chen, Ting and Kornblith, Simon and Norouzi, Mohammad and Hinton, Geoffrey},
+  booktitle = {ICML},
+  pages     = {1597--1607},
+  year      = {2020}
+}
+
+@article{oord2018representation,
+  title   = {Representation Learning with Contrastive Predictive Coding},
+  author  = {van den Oord, Aaron and Li, Yazhe and Vinyals, Oriol},
+  journal = {arXiv preprint arXiv:1807.03748},
+  year    = {2018}
+}
+
+@inproceedings{wang2021dense,
+  title     = {Dense Contrastive Learning for Self-Supervised Visual Pre-Training},
+  author    = {Wang, Xinlong and Zhang, Rufeng and Shen, Chunhua and Kong, Tao and Li, Lei},
+  booktitle = CVPR,
+  year      = {2021}
+}
+
+@inproceedings{park2023self,
+  title     = {What Do Self-Supervised Vision Transformers Learn?},
+  author    = {Park, Namuk and Kim, Wonjae and Heo, Byeongho and Kim, Taekyung and Yun, Sangdoo},
+  booktitle = ICLR,
+  year      = {2023}
+}
+
+% ------------------------------------------ collapse: regularizers and theory
+
+@inproceedings{bardes2022vicreg,
+  title     = {{VICReg}: Variance-Invariance-Covariance Regularization for Self-Supervised Learning},
+  author    = {Bardes, Adrien and Ponce, Jean and LeCun, Yann},
+  booktitle = ICLR,
+  year      = {2022}
+}
+
+@inproceedings{bardes2022vicregl,
+  title     = {{VICRegL}: Self-Supervised Learning of Local Visual Features},
+  author    = {Bardes, Adrien and Ponce, Jean and LeCun, Yann},
+  booktitle = NIPS,
+  year      = {2022}
+}
+
+@inproceedings{zbontar2021barlow,
+  title     = {Barlow Twins: Self-Supervised Learning via Redundancy Reduction},
+  author    = {Zbontar, Jure and Jing, Li and Misra, Ishan and LeCun, Yann and Deny, St{\'e}phane},
+  booktitle = {ICML},
+  pages     = {12310--12320},
+  year      = {2021}
+}
+
+@inproceedings{ermolov2021whitening,
+  title     = {Whitening for Self-Supervised Representation Learning},
+  author    = {Ermolov, Aleksandr and Siarohin, Aliaksandr and Sangineto, Enver and Sebe, Nicu},
+  booktitle = {ICML},
+  pages     = {3015--3024},
+  year      = {2021}
+}
+
+@inproceedings{jing2022understanding,
+  title     = {Understanding Dimensional Collapse in Contrastive Self-supervised Learning},
+  author    = {Jing, Li and Vincent, Pascal and LeCun, Yann and Tian, Yuandong},
+  booktitle = ICLR,
+  year      = {2022}
+}
+
+@inproceedings{hua2021feature,
+  title     = {On Feature Decorrelation in Self-Supervised Learning},
+  author    = {Hua, Tianyu and Wang, Wenxiao and Xue, Zihui and Ren, Sucheng and Wang, Yue and Zhao, Hang},
+  booktitle = ICCV,
+  year      = {2021}
+}
+
+@inproceedings{tian2021understanding,
+  title     = {Understanding Self-Supervised Learning Dynamics without Contrastive Pairs},
+  author    = {Tian, Yuandong and Chen, Xinlei and Ganguli, Surya},
+  booktitle = {ICML},
+  pages     = {10268--10278},
+  year      = {2021}
+}
+
+@inproceedings{li2022understanding,
+  title     = {Understanding Collapse in Non-Contrastive Siamese Representation Learning},
+  author    = {Li, Alexander C. and Efros, Alexei A. and Pathak, Deepak},
+  booktitle = ECCV,
+  year      = {2022}
+}
+
+@inproceedings{garrido2023duality,
+  title     = {On the Duality between Contrastive and Non-Contrastive Self-Supervised Learning},
+  author    = {Garrido, Quentin and Chen, Yubei and Bardes, Adrien and Najman, Laurent and LeCun, Yann},
+  booktitle = ICLR,
+  year      = {2023}
+}
+
+@inproceedings{halvagal2023implicit,
+  title     = {Implicit Variance Regularization in Non-Contrastive {SSL}},
+  author    = {Halvagal, Manu Srinath and Laborieux, Axel and Zenke, Friedemann},
+  booktitle = NIPS,
+  year      = {2023}
+}
+
+@inproceedings{shwartzziv2023information,
+  title     = {An Information Theory Perspective on Variance-Invariance-Covariance Regularization},
+  author    = {Shwartz-Ziv, Ravid and Balestriero, Randall and Kawaguchi, Kenji and Rudner, Tim G. J. and LeCun, Yann},
+  booktitle = NIPS,
+  year      = {2023}
+}
+
+@inproceedings{simon2023stepwise,
+  title     = {On the Stepwise Nature of Self-Supervised Learning},
+  author    = {Simon, James B. and Knutins, Maksis and Ziyin, Liu and Geisz, Daniel and Fetterman, Abraham J. and Albrecht, Joshua},
+  booktitle = {ICML},
+  pages     = {31852--31876},
+  year      = {2023}
+}
+
+@article{balestriero2023cookbook,
+  title   = {A Cookbook of Self-Supervised Learning},
+  author  = {Balestriero, Randall and Ibrahim, Mark and Sobal, Vlad and Morcos, Ari and Shekhar, Shashank and Goldstein, Tom and Bordes, Florian and Bardes, Adrien and Mialon, Gregoire and Tian, Yuandong and Schwarzschild, Avi and Wilson, Andrew Gordon and others},
+  journal = {arXiv preprint arXiv:2304.12210},
+  year    = {2023}
+}
+
+@inproceedings{zhai2023stabilizing,
+  title     = {Stabilizing Transformer Training by Preventing Attention Entropy Collapse},
+  author    = {Zhai, Shuangfei and Likhomanenko, Tatiana and Littwin, Etai and Busbridge, Dan and Ramapuram, Jason and Zhang, Yizhe and Gu, Jiatao and Susskind, Joshua M.},
+  booktitle = {ICML},
+  pages     = {40770--40803},
+  year      = {2023}
+}
+
+@article{geirhos2020shortcut,
+  title   = {Shortcut Learning in Deep Neural Networks},
+  author  = {Geirhos, Robert and Jacobsen, J{\"o}rn-Henrik and Michaelis, Claudio and Zemel, Richard and Brendel, Wieland and Bethge, Matthias and Wichmann, Felix A.},
+  journal = {Nature Machine Intelligence},
+  volume  = {2},
+  number  = {11},
+  pages   = {665--673},
+  year    = {2020}
+}
+
+% ----------------------------------------------- collapse / quality monitoring
+
+@inproceedings{garrido2023rankme,
+  title     = {{RankMe}: Assessing the Downstream Performance of Pretrained Self-Supervised Representations by Their Rank},
+  author    = {Garrido, Quentin and Balestriero, Randall and Najman, Laurent and LeCun, Yann},
+  booktitle = {ICML},
+  pages     = {10929--10974},
+  year      = {2023}
+}
+
+@inproceedings{thilak2024lidar,
+  title     = {{LiDAR}: Sensing Linear Probing Performance in Joint Embedding {SSL} Architectures},
+  author    = {Thilak, Vimal and Huang, Chen and Saremi, Omid and Dinh, Laurent and Goh, Hanlin and Nakkiran, Preetum and Susskind, Joshua M. and Littwin, Etai},
+  booktitle = ICLR,
+  year      = {2024}
+}
+
+@inproceedings{agrawal2022alpha,
+  title     = {$\alpha$-{ReQ}: Assessing Representation Quality in Self-Supervised Learning by Measuring Eigenspectrum Decay},
+  author    = {Agrawal, Kumar Krishna and Mondal, Arnab Kumar and Ghosh, Arna and Richards, Blake},
+  booktitle = NIPS,
+  year      = {2022}
+}
+
+@inproceedings{roy2007effective,
+  title     = {The Effective Rank: A Measure of Effective Dimensionality},
+  author    = {Roy, Olivier and Vetterli, Martin},
+  booktitle = {European Signal Processing Conference (EUSIPCO)},
+  year      = {2007}
+}
+
+@inproceedings{wang2020understanding,
+  title     = {Understanding Contrastive Representation Learning through Alignment and Uniformity on the Hypersphere},
+  author    = {Wang, Tongzhou and Isola, Phillip},
+  booktitle = {ICML},
+  pages     = {9929--9939},
+  year      = {2020}
+}
+
+@article{arputharaj2026comparative,
+  title   = {A Comparative Study of Label-free Representation Quality Metrics in Deep Learning},
+  author  = {Arputharaj, Daniel Richards and J{\"o}nsson, Daniel and Eilertsen, Gabriel},
+  journal = {Transactions on Machine Learning Research},
+  year    = {2026}
+}
+
+% ------------------------------- position information, artifacts and shortcuts
+
+@inproceedings{darcet2024vision,
+  title     = {Vision Transformers Need Registers},
+  author    = {Darcet, Timoth{\'e}e and Oquab, Maxime and Mairal, Julien and Bojanowski, Piotr},
+  booktitle = ICLR,
+  year      = {2024}
+}
+
+@inproceedings{yang2024denoising,
+  title     = {Denoising Vision Transformers},
+  author    = {Yang, Jiawei and Luo, Katie Z. and Li, Jiefeng and Deng, Congyue and Guibas, Leonidas and Krishnan, Dilip and Weinberger, Kilian Q. and Tian, Yonglong and Wang, Yue},
+  booktitle = ECCV,
+  year      = {2024}
+}
+
+@inproceedings{wang2024sinder,
+  title     = {{SINDER}: Repairing the Singular Defects of {DINOv2}},
+  author    = {Wang, Haoqi and Zhang, Tong and Salzmann, Mathieu},
+  booktitle = ECCV,
+  year      = {2024}
+}
+
+@inproceedings{jiang2025vision,
+  title     = {Vision Transformers Don't Need Trained Registers},
+  author    = {Jiang, Nick and Dravid, Amil and Efros, Alexei A. and Gandelsman, Yossi},
+  booktitle = NIPS,
+  year      = {2025}
+}
+
+@article{pawlowsky2026dino,
+  title   = {What {DINO} Saw: {ALiBi} Positional Encoding Reduces Positional Bias in Vision Transformers},
+  author  = {Pawlowsky, Moritz and Vamvakeros, Antonis and Weiss, Alexander and Bielefeld, Anja and Cooper, Samuel J. and Docherty, Ronan},
+  journal = {arXiv preprint arXiv:2603.16840},
+  year    = {2026}
+}
+
+@article{doshi2026biorthogonal,
+  title   = {Bi-Orthogonal Factor Decomposition for Vision Transformers},
+  author  = {Doshi, Fenil R. and Fel, Thomas and Konkle, Talia and Alvarez, George},
+  journal = {arXiv preprint arXiv:2601.05328},
+  year    = {2026}
+}
+
+@inproceedings{chu2023conditional,
+  title     = {Conditional Positional Encodings for Vision Transformers},
+  author    = {Chu, Xiangxiang and Tian, Zhi and Zhang, Bo and Wang, Xinlong and Shen, Chunhua},
+  booktitle = ICLR,
+  year      = {2023}
+}
+
+@inproceedings{islam2020much,
+  title     = {How Much Position Information Do Convolutional Neural Networks Encode?},
+  author    = {Islam, Md Amirul and Jia, Sen and Bruce, Neil D. B.},
+  booktitle = ICLR,
+  year      = {2020}
+}
+
+@inproceedings{kayhan2020translation,
+  title     = {On Translation Invariance in {CNNs}: Convolutional Layers Can Exploit Absolute Spatial Location},
+  author    = {Kayhan, Osman Semih and van Gemert, Jan C.},
+  booktitle = CVPR,
+  year      = {2020}
+}
+
+@inproceedings{doersch2015unsupervised,
+  title     = {Unsupervised Visual Representation Learning by Context Prediction},
+  author    = {Doersch, Carl and Gupta, Abhinav and Efros, Alexei A.},
+  booktitle = ICCV,
+  year      = {2015}
+}
+
+@inproceedings{zhai2022position,
+  title     = {Position Prediction as an Effective Pretraining Strategy},
+  author    = {Zhai, Shuangfei and Jaitly, Navdeep and Ramapuram, Jason and Busbridge, Dan and Likhomanenko, Tatiana and Cheng, Joseph Yitan and Talbott, Walter and Huang, Chen and Goh, Hanlin and Susskind, Joshua},
+  booktitle = {ICML},
+  pages     = {26010--26027},
+  year      = {2022}
+}
+
+@inproceedings{wang2023droppos,
+  title     = {{DropPos}: Pre-Training Vision Transformers by Reconstructing Dropped Positions},
+  author    = {Wang, Haochen and Fan, Junsong and Wang, Yuxi and Song, Kaiyou and Wang, Tong and Zhang, Zhaoxiang},
+  booktitle = NIPS,
+  year      = {2023}
+}
+
+@inproceedings{caron2024location,
+  title     = {Location-Aware Self-Supervised Transformers for Semantic Segmentation},
+  author    = {Caron, Mathilde and Houlsby, Neil and Schmid, Cordelia},
+  booktitle = {IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)},
+  year      = {2024}
+}
+
+@inproceedings{ren2023masked,
+  title     = {Masked Jigsaw Puzzle: A Versatile Position Embedding for Vision Transformers},
+  author    = {Ren, Bin and Liu, Yahui and Song, Yue and Bi, Wei and Cucchiara, Rita and Sebe, Nicu and Wang, Wei},
+  booktitle = CVPR,
+  year      = {2023}
+}
+
+% ------------------------------------------------------------ deep supervision
+
+@inproceedings{lee2015deeply,
+  title     = {Deeply-Supervised Nets},
+  author    = {Lee, Chen-Yu and Xie, Saining and Gallagher, Patrick and Zhang, Zhengyou and Tu, Zhuowen},
+  booktitle = {International Conference on Artificial Intelligence and Statistics (AISTATS)},
+  pages     = {562--570},
+  year      = {2015}
+}
+
+% -------------------------------- cross-modal / Earth-observation latent prediction
+
+@inproceedings{bachmann2022multimae,
+  title     = {{MultiMAE}: Multi-modal Multi-task Masked Autoencoders},
+  author    = {Bachmann, Roman and Mizrahi, David and Atanov, Andrei and Zamir, Amir},
+  booktitle = ECCV,
+  year      = {2022}
+}
+
+@inproceedings{lei2025m3jepa,
+  title     = {{M3-JEPA}: Multimodal Alignment via Multi-gate {MoE} based on the Joint-Embedding Predictive Architecture},
+  author    = {Lei, Hongyang and Cheng, Xiaolong and Qin, Qi and Wang, Dan and Huang, Huazhen and Gu, Qingqing and Wu, Yetao and Ji, Luo},
+  booktitle = {ICML},
+  pages     = {33902--33917},
+  year      = {2025}
+}
+
+@inproceedings{choudhury2026xjepa,
+  title     = {{X-JEPA}: A Novel Joint Learning Cross-Modal Predictive Alignment Framework for Remote Sensing Image Retrieval},
+  author    = {Choudhury, Shabnam and Salunkhe, Yash and Rajan, Vaibhav and Chaudhuri, Subhasis and Banerjee, Biplab},
+  booktitle = {IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)},
+  pages     = {4355--4364},
+  year      = {2026}
+}
+
+@article{hossain2026crjepa,
+  title   = {{CR-JEPA}: Cross-Modal Joint-Embedding Predictive Learning for Remote Sensing Image Retrieval},
+  author  = {Hossain, Md Aminur and Patel, Ayush V. and Dube, Nitant and Banerjee, Biplab},
+  journal = {arXiv preprint arXiv:2606.00706},
+  year    = {2026}
+}
+
+@inproceedings{cornelissen2026mumo,
+  title     = {Le {MuMo} {JEPA}: Multi-Modal Self-Supervised Representation Learning with Learnable Fusion Tokens},
+  author    = {Cornelissen, Ciem and Leroux, Sam and Simoens, Pieter},
+  booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops (CVPRW)},
+  pages     = {8238--8247},
+  year      = {2026}
+}
+
+@inproceedings{astruc2025anysat,
+  title     = {{AnySat}: One Earth Observation Model for Many Resolutions, Scales, and Modalities},
+  author    = {Astruc, Guillaume and Gonthier, Nicolas and Mallet, Clement and Landrieu, Loic},
+  booktitle = CVPR,
+  year      = {2025}
+}
+
+@inproceedings{tseng2025galileo,
+  title     = {Galileo: Learning Global \& Local Features of Many Remote Sensing Modalities},
+  author    = {Tseng, Gabriel and Fuller, Anthony and Reil, Marlena and Herzog, Henry and Beukema, Patrick and Bastani, Favyen and Green, James R. and Shelhamer, Evan and Kerner, Hannah and Rolnick, David},
+  booktitle = {ICML},
+  pages     = {60280--60300},
+  year      = {2025}
+}
+
+@article{lundqvist2025geojepa,
+  title   = {{GeoJEPA}: Towards Eliminating Augmentation- and Sampling Bias in Multimodal Geospatial Learning},
+  author  = {Lundqvist, Theodor and Delvret, Ludvig},
+  journal = {arXiv preprint arXiv:2503.05774},
+  year    = {2025}
+}

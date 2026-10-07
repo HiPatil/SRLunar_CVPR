@@ -1,0 +1,27 @@
+\section{Introduction}
+\label{sec:intro}
+
+Few places beyond Earth have been mapped as thoroughly as the Moon. The Lunar Reconnaissance Orbiter has returned camera images~\cite{robinson2010lunar}, laser altimetry~\cite{smith2010lunar}, thermal radiometry~\cite{paige2010lunar} and radar~\cite{nozette2010lunar} since 2009. Kaguya contributed multiband imagery and stereo topography~\cite{kato2010kaguya,ohtake2008performance}, and GRAIL a gravity field~\cite{zuber2013gravity}. For almost any patch of ground one can look up a stack of co-registered maps. They record its brightness at five wavelengths under a given sun, its height and slope, its roughness over tens of meters and its titanium or olivine content. What is scarce, as elsewhere in remote sensing, is labels.
+
+\begin{figure*}[t]
+  \centering
+  \resizebox{\textwidth}{!}{\input{figures/overview}}
+  \caption{\method in one picture. \textbf{(a)} Each product has its own stem, whose kernel equals its native pixels per token, so a 60\,m DTM, a 100\,m WAC image and a 1\,km roughness map all become the same $G{\times}G$ grid of ground cells. \textbf{(b)} The encoder sees the source with 20--30\% of its tokens hidden. The predictor's queries carry the target product, and the target's sun conditions every predictor layer through AdaLN and an extra key/value token. The target is the EMA encoder's normalized output for the other product at four depths. The dense loss on visible source tokens (\cref{eq:ctx}) is not drawn.}
+  \label{fig:overview}
+\end{figure*}
+
+Earth observation has answered that scarcity with foundation models pretrained on unlabeled multi-sensor archives~\cite{cong2022satmae,fuller2023croma,xiong2024neural,jakubik2025terramind,tseng2025galileo,astruc2025anysat}. The Moon got its first ones in 2026~\cite{fraccaro2026multimodal,gironamata2026lunarfm,prasad2026moonstone}, and all three learn by reconstructing masked pixels or discrete tokens. We ask what a model learns if it must instead predict, in representation space, what one instrument would record at a place, given what another instrument saw there.
+
+Lunar data suit the question for two reasons. The products are physically coupled. There is no atmosphere, so the shading in an image is set mostly by topography and the position of the sun, and albedo and roughness explain much of the rest. And every image comes with its illumination geometry, while the same terrain has been imaged many times under different suns. A predictor that is told the sun can therefore be asked what a footprint looks like under a particular light. To answer, the representation of the topography must carry whatever casts the shadows.
+
+We build this as a joint-embedding predictive architecture (JEPA)~\cite{assran2023self,bardes2024revisiting}. \method encodes one product of a 60\,km footprint with part of it hidden. A predictor, told the target product and the target's sun, then predicts the token grid that a slowly updated copy of the encoder produces for another product of the same footprint (\cref{fig:overview}). Each product, from 60\,m to 1\,km per pixel, gets a stem that reads its native pixels. As in OmniSat and AnySat~\cite{astruc2024omnisat,astruc2025anysat}, a token then covers the same ground cell whatever its product, but we keep one token grid per product.
+
+Most of our effort went into getting this to train. Cross-modal latent prediction has an escape route that masked prediction within one image mostly lacks. Much of the target grid cannot be predicted from the source at the scale of a token, and the student and its target share cheap channels: token position, product identity and footprint location. In several runs the model settled into a state in which every token encoded little more than its place in the grid. The loss fell tenfold, the effective rank within a tile rose and the VICReg penalties improved, while the representation stopped telling one footprint from another. This position-code collapse is a cousin of the positional collapse CAPI~\cite{darcet2025cluster} saw in latent masked image modeling, here with continuous targets and across modalities.
+
+Our contributions are:
+\begin{itemize}[leftmargin=*,itemsep=1pt,topsep=2pt]
+  \item A cross-modal JEPA for co-registered planetary rasters, in which a predictor told the target product and the sun of the target observation predicts the dense token grid of another product (\cref{sec:method}).
+  \item An account of collapse in this setting from several dozen pretraining runs. It shows why loss, within-sample rank and VICReg miss a position code, and that the VICReg covariance penalty and a variance hinge on predictions push toward it (\cref{sec:collapse,sec:ablations}).
+  \item Two cheap cross-sample monitors, which flagged all seven failures we analyzed, together with their blind spots (\cref{sec:monitor}).
+  \item Frozen features that detect craters on par with a masked-token lunar foundation model and gain up to 0.23 mAP$_{50}$ from a second input product. Relief, albedo and shadow probes show that the predictor uses the sun it is given (\cref{sec:downstream}).
+\end{itemize}

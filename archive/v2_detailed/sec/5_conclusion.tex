@@ -1,0 +1,6 @@
+\section{Limitations and conclusion}
+\label{sec:conclusion}
+
+\paragraph{Limitations.} The hypotheses rest on an informal decomposition (\cref{eq:decomp}) and on expectations over random directions, not on a proof that training reaches the position code. The probe labels of \cref{sec:ground_truth} are themselves a choice: a content probe can miss content that is present but not linearly decodable. Even tile-centered, the monitors cannot see a loss of detail within the tile, and they compare only runs whose targets are alike. Polar regions and the 1\,m NAC scale, where much of the scientific demand lies, are outside the planned runs.
+
+\paragraph{Conclusion.} We proposed predicting one lunar instrument from another in latent space, with a predictor told the sun, as a pretraining task for co-registered planetary data. We argued why it should teach the static maps what shapes the appearance of the surface, and why the same design invites a position code that the loss, within-sample statistics and VICReg read as progress. The experiments of \cref{sec:experiments} are built to decide these claims. The tile-centered cross-sample monitors are cheap enough to log in any JEPA whose targets are only partly predictable from the context. \TODO{revise with results}

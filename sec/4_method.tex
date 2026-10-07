@@ -1,0 +1,107 @@
+\section{\method: A Latent World Model of the Surface}
+\label{sec:method}
+
+\begin{figure*}[t]
+  \centering
+  \resizebox{\textwidth}{!}{\input{figures/overview}}
+  \caption{\method. (a) Each product is tokenized by its own stem at its native pixels per token, so that every token covers the same ground cell. (b) The encoder reads one or more partially masked observations of a footprint. The predictor, given the target product and the geometry $g_t$ under which it was recorded, predicts the token grid that the EMA encoder produces from the actual target. A state head predicts a per-cell state that must agree with the EMA projection of the targets.}
+  \label{fig:overview}
+\end{figure*}
+
+\subsection{Formulation}
+\label{sec:formulation}
+
+Let $x$ be a footprint with surface state $s(x)$. The corpus observes $s$ in two ways. Static products $X_m$ measure one aspect of the state directly. Camera images $X_{m,g}$ depend on the state and on the acquisition geometry $g$, six angles that fix the sun and the viewing direction. \method has an encoder $f_\theta$ that estimates a token-grid representation of the state from a set of $K$ partially observed products $\{(X_{m_k}, g_k)\}_{k=1}^{K}$ of the same footprint, and a predictor $g_\psi$ that, given the identity of a target product $t$ and its geometry $g_t$, predicts how $t$ looks in representation space. The representation it must match is produced by an EMA copy of the encoder from the actual target product, which the student never sees. Geometry plays the part that actions play in a world model~\cite{lecun2022path}: the same state rolled out under a different sun must give a different image. Static targets are predicted with a null geometry. A task sampler (\cref{sec:tasks}) fixes $K \in \{1,2,3\}$ sources and $M{=}2$ targets per row. Since each footprint has many camera observations, the same terrain is routinely asked for under suns it was never shown with.
+
+\begin{table}[t]
+  \centering
+  \footnotesize
+  \setlength{\tabcolsep}{2.1pt}
+  \caption{Products used for pretraining. $r$: native ground sample distance. $C$: bands. $p$: native pixels per token at $G{=}64$ and $S_{\max}{=}1000$, before and after a kernel floor of 4 (\cref{sec:tokens}). $^\star$Appearance depends on the sun; each observation carries its geometry. The lower block joins in the 12-product runs.}
+  \label{tab:modalities}
+  \begin{tabular}{@{}llrcc@{}}
+    \toprule
+    Product & Source & $r$ (m) & $C$ & $p$ \\
+    \midrule
+    WAC visible$^\star$       & LROC WAC~\cite{robinson2010lunar}      & 100  & 5    & 9 \\
+    WAC ultraviolet$^\star$   & LROC WAC                               & 500  & 2    & 2 $\to$ 4 \\
+    Elevation                 & SLDEM2015~\cite{barker2016new}         & 60   & 1    & 16 \\
+    Slope; aspect             & from elevation                         & 60   & 1; 2 & 16 \\
+    643\,nm mosaic            & WAC normalized~\cite{boyd2012lunar}    & 100  & 1    & 9 \\
+    Roughness                 & LOLA~\cite{kreslavsky2013lunar}        & 1000 & 1    & 1 $\to$ 4 \\
+    \midrule
+    Morphologic mosaic        & WAC~\cite{speyerer2011lunar}           & 100  & 1    & 9 \\
+    Normalized reflectance    & WAC normalized~\cite{boyd2012lunar}    & 500  & 7    & 2 $\to$ 4 \\
+    MI reflectance            & Kaguya MI~\cite{lemelin2016global}     & 60   & 8    & 16 \\
+    MI mineralogy             & Kaguya MI~\cite{lemelin2016global}     & 60   & 7    & 16 \\
+    TiO$_2$                   & WAC~\cite{sato2017lunar}               & 400  & 1    & 2 $\to$ 4 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{One token, one ground cell}
+\label{sec:tokens}
+
+A common approach resamples all products to a shared canvas and cuts it into patches. At a $64\times64$ token grid with $4\times4$ patches, this shrinks the 1000\,px topography raster four times and the 600\,px WAC image 2.3 times, and blows the 60\,px roughness map up four times. We instead align tokens to ground cells, as OmniSat and AnySat do~\cite{astruc2024omnisat,astruc2025anysat}, and give every product $m$ its own stem $\phi_m$ whose kernel and stride equal its native pixels per token,
+\begin{equation}
+  p_m = \max\!\big(k_{\min},\ \operatorname{round}(\min(E/r_m, S_{\max})/G)\big),
+  \label{eq:ppt}
+\end{equation}
+where $E{=}60$\,km is the footprint extent, $r_m$ the ground sample distance and $G$ the grid size. Sub-tile rows (NAC, stereo terrain) use $E{=}500$\,m in the same rule, which gives the 500\,px NAC and 166\,px terrain rasters. The raster is resized to $Gp_m$ pixels per side, which changes it by a few percent unless the floor applies, and $\phi_m$ maps it to a $G\times G$ grid of $D$-dimensional tokens. Every token is then one ground cell of $E/G$ meters (940\,m at $G{=}64$), whatever the product (\cref{tab:modalities}).
+
+\paragraph{Kernel floor.} At $G{=}64$, \cref{eq:ppt} with $k_{\min}{=}1$ gives LOLA roughness one pixel per token. Each token is then a scalar times a fixed vector, so all roughness tokens lie on a line in $\mathbb{R}^D$ (measured effective rank 1), a target that is easy to fit and carries little. A floor $k_{\min}{=}4$ pre-upsamples coarse products so that each token sees a $4\times4$ patch.
+
+\paragraph{Convolutional stems.} A linear patch projection~\cite{dosovitskiy2021image} has to preserve edges and texture through one matrix, so our stems are factorized convolutions~\cite{xiao2021early}: $p_m$ is split into stride-3 and stride-2 stages ($9{=}3{\cdot}3$, $16{=}2^4$, $4{=}2^2$), each a convolution with GroupNorm and GELU, followed by a $1\times1$ projection to $D$. The usual $3\times3$ kernel with padding 1 has a quiet flaw here, a case of the receptive-field offsets that stride and padding produce~\cite{araujo2019computing,alsallakh2021mind}. It centers output $o$ of a stride-$s$ stage on input pixel $so$ rather than on the center $so+(s{-}1)/2$ of its cell, and the shifts add up across stages to
+\begin{equation}
+  \delta_m = -\frac{p_m-1}{2p_m}\ \text{cells},
+  \label{eq:shift}
+\end{equation}
+that is $-0.38$, $-0.44$ and $-0.47$ of a token for $p_m = 4, 9, 16$. Because the shift depends on $p_m$, tokens of different products refer to ground up to 0.09 cells apart. A kernel of size $s{+}2$ with padding 1 centers the output on its cell, overlaps its neighbors at every stride and keeps the exact $G\times G$ output (\cref{sec:supp_stem}).
+
+\subsection{Evidence encoder}
+\label{sec:encoder}
+
+Each source product enters through its stem, a learned product embedding $\mu_m$ and, for camera observations, an embedding $\eta$ of its geometry and native resolution that is added to every token,
+\begin{equation}
+  e_{m,i} = \LN\big(\phi_m(X_m)_i\big) + \mu_m + \eta(g_m, r_m).
+\end{equation}
+No absolute location enters the evidence tokens or the EMA targets: the state has to come from what the instruments recorded, not from where the footprint is. Our earlier recipe added a Slepian location embedding $\lambda(\ell)$~\cite{simons2006spatiospectral,rao2026localized} of the footprint center to every token on both paths; \cref{sec:collapse} shows why that is a liability.
+
+Only visible tokens reach the encoder. With one source we hide a square block covering 20--30\% of the grid. With several sources a fixed budget of visible tokens (768 at $G{=}32$) is split between them, a quarter of it at cells visible in every source and the rest at source-specific cells, so that the amount of evidence does not grow with $K$ and the encoder has to reconcile observations that overlap only partly. The encoder $f_\theta$ is a ViT-B~\cite{dosovitskiy2021image} (12 blocks, $D{=}768$, 12 heads) whose positions enter only through axial 2D rotary embeddings~\cite{su2024roformer,heo2024rotary} on the cell coordinates, so that tokens of different products at the same cell attend to each other as neighbors at offset zero. The last four blocks replace the MLP by a sparse mixture of 8 experts with top-2 routing, a router bias per product and the load-balancing loss of V-MoE~\cite{riquelme2021scaling}. Layer-normalized features after blocks 3, 6, 9 and 12 are fused by a linear layer into the evidence $z \in \mathbb{R}^{|V|\times D}$, where $V$ is the set of visible tokens over all sources. The target branch is an EMA copy of the stems, embeddings and encoder. It reads each full target product and returns features $\bar z^{\,l}_t \in \mathbb{R}^{G^2\times D}$ at the same four depths.
+
+\subsection{A predictor that is told the sun}
+\label{sec:predictor}
+
+The predictor $g_\psi$ is a 12-layer decoder of the encoder's width. I-JEPA keeps its predictor narrow~\cite{assran2023self}, but translating between products is harder than filling in part of one image. Its $G^2$ queries are a learned vector plus the target product embedding $\mu_t$, made distinct only by rotary embeddings of their cells. Each layer cross-attends from the queries to the evidence, self-attends among the queries and applies an MLP. The target geometry $g_t$ is featurized as cosines and sines of incidence, emission and phase, a sine--cosine pair for the sub-solar azimuth and longitude, the sub-solar latitude as a scalar, and a validity bit that is zero for static targets and multiplies the angle features, so that ``no sun'' is a distinct input rather than a sun at zenith. A small MLP turns this into a condition vector $c_t$ that sets the scale and shift of every LayerNorm in the predictor (AdaLN-Zero~\cite{peebles2023scalable}, initialized to the identity) and is also appended to the keys and values of the cross-attention as one extra token. A bounded geographic prior, Slepian features of the footprint center, enters the predictor through a second extra token and is dropped at random half of the time, so the predictor may use location to refine an observation but cannot rely on it. Four linear heads, one per supervision depth, read the final query states and give $\hat z^{\,l}_t$.
+
+\subsection{State head}
+\label{sec:state}
+
+The observation predictor is disposable; at inference we keep the encoder. To make the encoder's output behave like a state rather than a cache of whatever the current targets need, a second predictor without conditioning reads the evidence and writes one vector per cell, projected to $\hat w \in \mathbb{R}^{G^2\times d_w}$ with $d_w{=}256$. Its teacher is the mean, over the $M$ targets of the row, of the EMA projection of the final-depth target features, $\bar w = \frac{1}{M}\sum_t \bar P(\bar z^{\,L}_t)$. The targets of a row are different products, or the same product under different suns, so $\bar w$ is what they have in common. The loss is $\mathcal{L}_{\text{state}} = \|\hat w - \sg[\bar w]\|^2$, ramped in over the first 10\% of training. Because the teacher is the EMA of the student's own projector on an average of views, a constant $\hat w$ would satisfy it, so VICReg variance and covariance terms~\cite{bardes2022vicreg} act on $\hat w$. This is the one place where we keep these regularizers (\cref{sec:collapse}).
+
+\subsection{Objective}
+\label{sec:objective}
+
+With $\rho$ the smooth-$\ell_1$ loss and $\LN$ a LayerNorm without affine parameters, the observation loss for target $t$ is
+\begin{equation}
+  \mathcal{L}_{\text{obs}} = \frac{1}{L}\sum_{l=1}^{L} \frac{1}{G^2 D}\sum_{i,d}
+  \rho\big(\hat z^{\,l}_{t,i,d} - \LN(\sg[\bar z^{\,l}_{t,i}])_d\big),
+  \label{eq:cm}
+\end{equation}
+with $L{=}4$ depths and $\sg$ the stop-gradient. Following V-JEPA~2.1~\cite{murlabadia2026vjepa} we add a dense context loss that pulls each visible source token, at every depth, toward the EMA encoding of the full, unmasked source at the same cell,
+\begin{equation}
+  \mathcal{L}_{\text{ctx}} = \frac{1}{L}\sum_{l} \frac{1}{|V|}\sum_{i\in V} w_i\, \bar\rho\big(z^{l}_{i}, \LN(\bar z^{\,l}_{s,i})\big),
+  \label{eq:ctx}
+\end{equation}
+where $\bar\rho$ averages $\rho$ over features and $w_i \propto e^{-(d_i-1)/\tau}$, with $d_i$ the distance in cells to the nearest hidden cell and $\tau{=}2$, normalized to mean one. Tokens next to the hidden region, where the full view knows more than the masked one, carry most of the weight, and the loss keeps visible tokens local instead of letting them turn into global aggregators. The full objective is
+\begin{equation}
+  \mathcal{L} = \sum_t \mathcal{L}_{\text{obs}} + \lambda_{\text{ctx}}\mathcal{L}_{\text{ctx}}
+  + w_{\text{s}}\,\mathcal{L}_{\text{state}} + w_v\,\mathcal{V}(\hat w) + w_c\,\mathcal{C}(\hat w) + \alpha\,\mathcal{L}_{\text{moe}},
+  \label{eq:total}
+\end{equation}
+with $\lambda_{\text{ctx}}{=}0.5$, $w_{\text{s}}$ ramped to 0.5, $w_v{=}1$, $w_c{=}0.005$ and $\alpha{=}10^{-3}$. The EMA decay follows a cosine from 0.996 to 0.9995. An optional head regresses the footprint means of Diviner temperature and GRAIL gravity, the two layers too coarse to tokenize, from the state; it is off in this recipe. The earlier recipe whose runs \cref{sec:collapse,sec:experiments} report differs in four ways: $K{=}1$ and no state head, the location embedding on all tokens, VICReg terms on the evidence and on the predictions, and the coarse-science head at weight 0.01.
+
+\subsection{Tasks}
+\label{sec:tasks}
+
+Products fall into families by the physical process that dominates them: imagery (WAC visible and ultraviolet, NAC), photometrically normalized appearance (643\,nm and multiband mosaics, Kaguya reflectance), terrain (elevation, slope, aspect, roughness) and composition (mineralogy, TiO$_2$). Within a family prediction is nearly redundant; across families it is the signal we want. Each row draws one of five tasks: one source predicting two targets of other families (25\%); two or three sources predicting other families (45\%); completion of the source's own hidden cells plus one other product (20\%); a terrain product predicting another terrain product and one outside product (10\%); and, where a footprint has several camera observations, the same product under another sun, which is relighting (weight to be set after a corpus audit). The second target is drawn from a family different from the first whenever possible, and targets never appear among the sources. A minimum sampling frequency per product keeps rare products in the mixture.

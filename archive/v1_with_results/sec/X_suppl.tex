@@ -1,0 +1,141 @@
+\clearpage
+\setcounter{page}{1}
+\maketitlesupplementary
+\appendix
+
+\section{Receptive-field offset of strided conv stems}
+\label{sec:supp_stem}
+
+Consider one stage with stride $s$, kernel $k$ and padding $q$ on a one-dimensional input of length $sn$ (pixels $0,\dots,sn{-}1$). Output $o$ reads input pixels $so{-}q,\dots,so{-}q{+}k{-}1$, so its receptive field is centered at $so - q + (k{-}1)/2$. The cell that output $o$ stands for spans pixels $so,\dots,so{+}s{-}1$, with center $so + (s{-}1)/2$. The offset of one stage is therefore
+\begin{equation}
+  \delta_1 = \frac{k-1}{2} - q - \frac{s-1}{2}.
+\end{equation}
+With $k{=}3$ and $q{=}1$, $\delta_1 = -(s{-}1)/2$ input pixels. Stacking stages with strides $s_1, \dots, s_n$ and total stride $P = \prod_j s_j$ gives, in native pixels,
+\begin{equation}
+  \delta = -\sum_{j} \Big(\prod_{i<j} s_i\Big)\frac{s_j-1}{2} = -\frac{P-1}{2},
+\end{equation}
+because the sum telescopes. In units of one token cell ($P$ pixels) this is \cref{eq:shift}. With $k{=}s{+}2$ and $q{=}1$, $\delta_1{=}0$ for every $s$, the receptive field extends one pixel beyond the cell on each side, and the output length is unchanged. At $s{=}3$ the $3\times3$ kernel reads pixels $3o{-}1,\dots,3o{+}1$. Pixel $3n{-}1$ is never read, and two such stages leave the last four of 576 columns of a WAC tile unused. Stride-2 stages read every pixel at either kernel size.
+
+\begin{table}[h]
+  \centering
+  \small
+  \caption{Measured token offset (fraction of a cell, negative is up-left) and unread border columns with kernel 3, for the conv stems at $G{=}64$.}
+  \label{tab:supp_shift}
+  \begin{tabular}{@{}lccc@{}}
+    \toprule
+    $p$ (strides) & kernel 3 & kernel $s{+}2$ & unread cols \\
+    \midrule
+    4 (2, 2)          & $-0.375$ & 0 & 0 \\
+    9 (3, 3)          & $-0.444$ & 0 & 4 \\
+    16 (2, 2, 2, 2)   & $-0.469$ & 0 & 0 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Runs}
+\label{sec:supp_runs}
+
+\Cref{tab:supp_runs} lists every run this paper cites. All runs use the ViT-B encoder with four MoE layers (except A3) and the 12-layer predictor, four supervision levels, $K{=}2$ targets and a visible block of 70--80\% (except B1, B2, which see the full source). The variance hinge is on for context and predictions with $\gamma{=}1$ except in F4 and F5. SIGReg is off in every run listed. $\Delta$ and $S$ are validation values at the last step; max $S$ is taken after 5k steps.
+
+\begin{table*}[t]
+  \centering
+  \scriptsize
+  \setlength{\tabcolsep}{3pt}
+  \caption{Runs cited in the paper. Stems: shared canvas (C) or fixed-GSD with kernel floor $k_{\min}$ (F$k$). EMA: constant 0.996 (c) or cosine ramp to 0.9995 (r). Batch: effective footprint rows per optimizer step. $^\ddagger$Seven products configured; the raster gate of the shared-canvas path drops LOLA roughness at $G{=}64$, leaving six.}
+  \label{tab:supp_runs}
+  \begin{tabular}{@{}llcccccccccccl@{}}
+    \toprule
+    ID & Run & $G$ & Prod. & Stems & $S_{\max}$ & LR & Batch & EMA & $w_c$ & Steps & $\Delta$ & $S$ & max $S$ / outcome \\
+    \midrule
+    A1 & MoE, $k_{\min}{=}1$         & 64  & 12 & F1 & 1000 & 3e-5 & 256  & r & 0.01  & 97.5k & .167 & .16 & .56 / healthy \\
+    A2 & MoE, $k_{\min}{=}4$                                 & 64  & 12 & F4 & 1000 & 3e-5 & 256  & r & 0.01  & 97.5k & .121 & .25 & .42 / healthy \\
+    A3 & dense, $k_{\min}{=}1$                               & 64  & 12 & F1 & 1000 & 3e-5 & 256  & r & 0.01  & 112.5k & .119 & .51 & .71 / healthy \\
+    B1 & long-short attention                           & 64  & 12 & F1 & 600  & 3e-5 & 256  & r & 0.01  & 35k   & .000 & 1.00 & 1.00 / position code \\
+    B2 & long-short + border clamp                           & 64  & 12 & F1 & 4096 & 3e-5 & 256  & r & 0.01  & 60k   & .000 & 1.00 & 1.00 / position code \\
+    C1 & $w_c{=}0.005$                           & 32  & 5  & C  & 600  & 1e-4 & 3072 & c & 0.005 & 9k    & .181 & .48 & .48 / rank falling, stopped \\
+    C2 & $w_c{=}0.05$         & 32  & 5  & C  & 600  & 1e-4 & 3072 & c & 0.05  & 8.5k  & .003 & .91 & .91 / position code \\
+    D1 & $S_{\max}{=}600$                               & 64  & 7  & F1 & 600  & 1e-4 & 96   & c & 0.005 & 54k   & .069 & .81 & .81 / dimensional \\
+    D2 & $S_{\max}{=}1000$                                   & 64  & 7  & F1 & 1000 & 1e-4 & 96   & c & 0.005 & 118k  & .120 & .66 & .90 / dimensional \\
+    D3 & 50\% NAC rows                                       & 64  & 12 & F1 & 1000 & 1e-4 & 256  & c & 0.01  & 160k  & .024 & .97 & .99 / dimensional \\
+    E1 & shared canvas, 5 prod.                            & 64  & 5  & C  & 1000 & 5e-5 & 128  & c & 0.01  & 65k   & .127 & .67 & .67 / dimensional, diverged \\
+    E2 & fixed-GSD, 5 prod.                                  & 64  & 5  & F1 & 1000 & 5e-5 & 128  & c & 0.01  & 82.5k & .060 & .38 & .69 / healthy \\
+    F1 & grid sweep                                          & 32  & 12 & F4 & 4096 & 3e-5 & 256  & r & 0.01  & 10k   & .009 & .55 & .55 / short \\
+    F2 & grid sweep                              & 64  & 12 & F4 & 4096 & 3e-5 & 256  & r & 0.01  & 10k   & .010 & .77 & .77 / short \\
+    F3 & grid sweep                                          & 128 & 12 & F4 & 4096 & 3e-5 & 256  & r & 0.01  & 10k   & .016 & .63 & .63 / short \\
+    F4 & F2, no hinge on $\hat z$               & 64  & 12 & F4 & 4096 & 3e-5 & 256  & r & 0.01  & 10k   & .055 & .24 & .24 / short \\
+    F5 & F2, hinge $\gamma{=}0.3$ on $\hat z$  & 64  & 12 & F4 & 4096 & 3e-5 & 256  & r & 0.01  & 2.5k  & .033 & .30 & -- / stopped \\
+    G1 & dense loss + conv stems                             & 32  & 7  & C  & 600  & 1e-4 & 768  & c & 0.005 & 40k   & .283 & .23 & .23 / healthy, running \\
+    G2 & closest earlier run                                 & 32  & 7  & C  & 600  & 1e-4 & 768  & c & 0.005 & 48.5k & .062 & .51 & .67 / healthy \\
+    H  & downstream backbone                                 & 64  & 6$^\ddagger$ & C & 600 & 1e-4 & 512 & c & 0.005 & 79k & .046 & .57 & .74 / used downstream \\
+    I  & within-tile smoothing                               & 64  & 12 & F1 & 1000 & 5e-5 & 128  & c & 0.01  & 87.5k & .082 & .55 & .67 / smoothing \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+\paragraph{Shared recipe.} Unless stated otherwise: ViT-B encoder with the last four blocks MoE (8 experts, top-2), 12-layer predictor of width 768, four supervision levels, visible square block covering 70--80\% of the grid, $K{=}2$ targets per row, VICReg variance weight 1 on context and predictions, covariance 0.005--0.01, no SIGReg, EMA decay 0.996 (constant or ramped to 0.9995), AdamW with weight decay 0.05 and clipping at 1, warmup over 10\% of the schedule, cosine decay to $10^{-6}$.
+
+\paragraph{Runs in \cref{tab:signals}.} The two long-short attention runs use $G{=}64$, fixed-GSD stems with $k_{\min}{=}1$, 12 products, no source masking, peak learning rate $3{\times}10^{-5}$ and $w_c{=}0.01$. The second adds the border clamp and uses $S_{\max}{=}4096$ instead of 600. The $w_c{=}0.05$ run uses $G{=}32$, shared-canvas stems, 5 products and peak learning rate $10^{-4}$ at an effective batch of 3072, and differs from its $w_c{=}0.005$ twin only in that weight. The twin is not a clean healthy reference: over its last 4k steps, before it stopped at 9.3k, its within-tile rank fell from 384 to 120 while its covariance rose from 5.7 to 14.8, the early signature of dimensional collapse, with $S$ at 0.38. The pair shows only that the larger weight produced a position code. The fixed-GSD pair uses $G{=}64$, seven products, $k_{\min}{=}1$ and peak learning rate $10^{-4}$, and differs only in $S_{\max}$. The 50\%-NAC run uses 12 products at $G{=}64$ and draws half of its rows from Level-2 NAC subtiles. The shared-canvas run is the baseline arm of the five-product stem comparison of \cref{sec:exp_tokens}.
+
+\paragraph{Downstream backbone.} $G{=}64$, shared-canvas stems, products WAC visible, WAC UV, elevation, slope, aspect and the 643\,nm mosaic. LOLA roughness was configured but dropped by the raster-size gate of the shared-canvas path. $S_{\max}{=}600$, peak learning rate $10^{-4}$, constant EMA 0.996, $w_c{=}0.005$, effective batch 512, 79.1k steps, final $\Delta{=}0.046$ and $S{=}0.57$.
+
+\section{Kernel floor per product pair}
+\label{sec:supp_floor}
+
+\Cref{tab:floor} breaks the kernel-floor comparison of \cref{sec:exp_tokens} (runs A1 and A2) down by groups of product pairs.
+
+\begin{table}[t]
+  \centering
+  \footnotesize
+  \setlength{\tabcolsep}{3.5pt}
+  \caption{Kernel floor, per group of product pairs (validation $\Delta$ at 97.5k steps, macro average over pairs; 12 products, grid 64). The floor affects LOLA roughness (1 px/token at $k_{\min}{=}1$) and the 500\,m and 400\,m WAC products (2 px/token).}
+  \label{tab:floor}
+  \begin{tabular}{@{}lccc@{}}
+    \toprule
+    Pairs & \#pairs & $k_{\min}{=}1$ & $k_{\min}{=}4$ \\
+    \midrule
+    Roughness as target                & 11 & 0.033 & \textbf{0.103} \\
+    Roughness as source                & 11 & 0.023 & \textbf{0.100} \\
+    TiO$_2$ as target                       & 11 & 0.079 & \textbf{0.112} \\
+    WAC UV as target                        & 11 & \textbf{0.145} & 0.134 \\
+    Pairs without floored products     & 42 & \textbf{0.205} & 0.122 \\
+    \midrule
+    Overall (count-weighted)                & 132 & \textbf{0.167} & 0.121 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Downstream protocols}
+\label{sec:supp_downstream}
+
+\Cref{tab:safs} lists all relief, albedo and shadow probe metrics of \cref{sec:downstream}.
+
+\begin{table}[h]
+  \centering
+  \footnotesize
+  \setlength{\tabcolsep}{4pt}
+  \caption{Relief, albedo and shadows from frozen features (40 held-out footprints, 8 suns each). Invariance: correlation between predictions for one footprint under different suns. Retrieval: top-1 accuracy of matching a prediction to its footprint.}
+  \label{tab:safs}
+  \begin{tabular}{@{}lc@{}}
+    \toprule
+    Probe and metric & Value \\
+    \midrule
+    \multicolumn{2}{@{}l}{\emph{WAC $\to$ relief, linear probe}} \\
+    \quad correlation (same probe on pixels: 0.12) & 0.705 \\
+    \quad sun invariance / retrieval               & 0.90 / 0.96 \\
+    \multicolumn{2}{@{}l}{\emph{WAC $\to$ albedo, linear probe}} \\
+    \quad correlation with the 643\,nm mosaic       & 0.840 \\
+    \quad sun invariance / retrieval               & 0.87 / 1.00 \\
+    \multicolumn{2}{@{}l}{\emph{WAC $\to$ relief, SAFS head}} \\
+    \quad correlation / RMSE (zero relief: 551\,m)  & 0.808 / 299\,m \\
+    \midrule
+    \multicolumn{2}{@{}l}{\emph{DTM + sun $\to$ WAC shadows, linear probe}} \\
+    \quad AUC with the true sun                     & \textbf{0.89} \\
+    \quad AUC with another observation's sun        & 0.59 \\
+    \quad AUC with no sun                           & 0.49 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\paragraph{Crater detection.} Robbins 1k has 800/100/100 WAC tiles of 512\,px at 100\,m, Robbins 10k has 8000/1000/1000 tiles with a wider range of illumination, and the NAC set has 289/63/56 hand-labeled tiles of 256\,px at about 1\,m. The detectors read the frozen EMA encoder at its four supervision depths through a trainable three-level feature pyramid. The per-product stems are fine-tuned with the neck and head at learning rate $10^{-4}$, while the transformer stays frozen. We train with multi-scale native crops. The pixel branch is a shallow convolution on the raw input that feeds the finest pyramid level. Our protocol scores all boxes down to 2\,px with at most 300 detections. The NASA-IBM protocol keeps boxes with a shortest side of at least 10\,px, drops tiles without craters and allows 500 detections. In that protocol the NASA-IBM backbone is fully frozen, whereas our stems are fine-tuned, a difference in our favor. The predicted DTM comes from a DPT head trained on the backbone's elevation-product predictor features, given the WAC image.
+
+\paragraph{Relief, albedo and shadows.} Footprints with at least six suns are split, with a fixed seed, into 120 for fitting and 40 for evaluation. Outputs are 128\,px (469\,m per pixel). The relief target is the plane-detrended 60\,m DTM. Albedo is scored against the 643\,nm mosaic and, separately, against a multi-sun pseudo-albedo. The linear probes read frozen predictor features. The relief head fuses the elevation-product features across depths, is conditioned on the sun, and integrates predicted slope and aspect with a Frankot--Chellappa solver. It was fitted on 600 footprints with two suns each. Shadow AUC uses the darkest-quantile pixels of the WAC image as labels, on high-incidence samples only, where dark pixels are mostly cast shadow.
